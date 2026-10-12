@@ -696,7 +696,7 @@ function vIntegrations(){
    ["6","Operations","Equipment and contract mining",["OEMs and dealers","Contract miners"]],
    ["7","Offtake","Processing, transport, export",["Wash plants, hauliers","Transnet, ports, customs"]]].map(([n,t,d,l])=>`<div class="st"><div class="n">${n}</div><b>${t}</b><div class="muted" style="font-size:12.5px">${d}</div><ul>${l.map(x=>`<li>${x}</li>`).join("")}</ul></div>`).join("")}</div></div>
   <div class="section"><h2>Connections</h2><div class="panel tablewrap"><table><thead><tr><th>System</th><th>Stage</th><th>Used for</th><th>Today</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${esc(r[0])}</b></td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${pill(r[3],tone(r[3]))}</td></tr>`).join("")}</tbody></table></div></div>
-  <div class="section"><h2>Add it to the Tafari Capital website</h2><div class="panel pad"><p style="margin-top:0">Paste this button into the main website where clients should enter the platform. On the Tafari Capital website this already points to the Exchange.</p>
+  <div class="section"><h2>Add it to the Tafari Capital website</h2><div class="panel pad"><p style="margin-top:0">Paste this button into the main website where clients should enter the platform. The Exchange lives at tafaricapital.co.ls/exchange/. Use this button on partner sites or in email signatures.</p>
   <pre class="code" id="snippet">&lt;a href="PLATFORM_LINK" target="_blank" rel="noopener"
    style="display:inline-block;padding:12px 22px;background:#86672C;color:#fff;
    border-radius:6px;font-family:sans-serif;text-decoration:none"&gt;

@@ -17,6 +17,17 @@ python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
+## Domain
+
+The site is set up for **https://tafaricapital.co.ls** (see `CNAME`). The Exchange is at `/exchange/`.
+
+For GitHub Pages, point the domain's DNS at GitHub with the domain registrar:
+
+- `A` records for `tafaricapital.co.ls` → `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
+- `CNAME` record for `www` → `citizen-bnk.github.io`
+
+Then enter the domain under **Settings → Pages → Custom domain** and tick **Enforce HTTPS**.
+
 ## Publish
 
 Any static host works (GitHub Pages, Netlify, Cloudflare Pages, or the existing web host).

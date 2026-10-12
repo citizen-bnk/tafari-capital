@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Tafari Capital</title>
-<meta name="description" content="Tafari Capital connects owners of mineral and commodity assets in Lesotho and South Africa with verified buyers, operators and logistics partners, and structures the deals that follow.">
+<meta name="description" content="Tafari Capital distributes food staples and fast-moving consumer goods across Lesotho, and connects owners of mining assets in Lesotho and South Africa with verified buyers, operators and logistics partners.">
 <link rel="canonical" href="https://tafaricapital.co.ls/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://tafaricapital.co.ls/">
 <meta property="og:title" content="Tafari Capital">
-<meta property="og:description" content="Verified mining and commodity deals across Lesotho and South Africa.">
+<meta property="og:description" content="FMCG distribution in Lesotho and verified mining deals across Lesotho and South Africa.">
 <meta property="og:image" content="https://tafaricapital.co.ls/assets/seal.png">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,11 +72,11 @@ p{margin:0}
 .hero .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
 .hero .seal{opacity:.92;max-width:400px;justify-self:end;filter:drop-shadow(0 20px 40px rgba(0,0,0,.35))}
 .facts{border-top:1px solid rgba(201,165,92,.22);position:relative}
-.facts .wrap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;padding-block:22px}
+.facts .wrap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;padding-block:22px;align-items:start}
 .facts div{font-size:13px;color:#9DA4B2}
 .facts b{display:block;color:var(--gold-hi);font-weight:500;font-size:15px}
 
-section{padding-block:96px}
+section{padding-block:96px;scroll-margin-top:72px}
 .sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px 64px;align-items:end;margin-bottom:52px}
 .sec-head .eyebrow{margin-bottom:12px}
 
@@ -182,6 +182,30 @@ footer b{color:#C9CDD6;font-weight:500}
   form{grid-template-columns:1fr;padding:22px}
   .stages{grid-template-columns:1fr}
 }
+/* fmcg */
+.svc.lead{grid-column:1/-1;background:linear-gradient(90deg,#FBF7EE,#FFFFFF 60%)}
+.svc.lead h3{font-size:22px}
+.products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.prod{border:1px solid var(--rule);border-radius:4px;padding:22px 22px 24px;display:flex;flex-direction:column;gap:8px;background:var(--paper)}
+.prod .cat{font-family:var(--f-display);font-size:18px;font-weight:600;color:var(--ink)}
+.prod .cat::before{content:"";display:inline-block;width:8px;height:8px;background:var(--gold);transform:rotate(45deg);margin-right:10px;vertical-align:middle}
+.prod p{color:var(--grey);font-size:15px}
+.prod.ask{background:var(--navy);border-color:var(--navy)}
+.prod.ask .cat{color:var(--gold-hi)}
+.prod.ask p{color:#B9BFCB}
+.prod.ask a{color:var(--gold-hi);font-weight:500;text-decoration:none;margin-top:auto}
+.subhead{margin:64px 0 24px;font-size:22px}
+.flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;counter-reset:fl;border-top:2px solid var(--gold)}
+.flow li{counter-increment:fl;padding:20px 22px 0 0}
+.flow li::before{content:counter(fl,decimal-leading-zero);display:block;font-family:var(--f-display);color:var(--gold);font-size:15px;margin-bottom:8px}
+.flow b{display:block;font-weight:600;margin-bottom:6px}
+.flow span{color:var(--grey);font-size:14.5px}
+.twocol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:56px}
+.twocol > div{background:var(--stone);border-radius:4px;padding:26px 28px}
+.twocol h3{margin-bottom:12px}
+.twocol ul{margin:0;padding-left:18px;color:var(--grey);display:grid;gap:6px}
+@media (max-width:980px){.products{grid-template-columns:repeat(2,minmax(0,1fr))}.flow{grid-template-columns:repeat(2,minmax(0,1fr));border-top:0}.flow li{border-top:2px solid var(--gold);padding-bottom:20px}}
+@media (max-width:640px){.products,.flow,.twocol{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -192,6 +216,7 @@ footer b{color:#C9CDD6;font-weight:500}
     <button class="burger" id="burger" aria-expanded="false" aria-controls="menu">Menu</button>
     <nav class="menu" id="menu">
       <a href="#services">What we do</a>
+      <a href="#fmcg">Products</a>
       <a href="#exchange">The Exchange</a>
       <a href="#principles">How we work</a>
       <a href="#about">About</a>
@@ -207,20 +232,20 @@ footer b{color:#C9CDD6;font-weight:500}
       <div>
         <div class="eyebrow">Maseru · Johannesburg</div>
         <h1>Investing in Africa. <span>Building generations.</span></h1>
-        <p class="lede">Tafari Capital connects owners of mining and commodity assets in Lesotho and South Africa with verified buyers, operators and logistics partners, and structures the deals that follow.</p>
+        <p class="lede">Tafari Capital is a Basotho-owned trade and investment house. We distribute food staples and consumer goods across Lesotho, and connect owners of mining assets in Lesotho and South Africa with verified buyers, operators and logistics partners.</p>
         <div class="ctas">
-          <a class="btn gold" href="exchange/">List or buy a verified asset</a>
-          <a class="btn line" href="#contact">Speak to Tafari</a>
+          <a class="btn gold" href="#fmcg">Our products and distribution</a>
+          <a class="btn line" href="exchange/">List or buy a verified asset</a>
         </div>
       </div>
       <img class="seal" src="assets/seal.png" alt="Tafari Capital seal: Generational Sovereignty">
     </div>
     <div class="facts">
       <div class="wrap">
-        <div><b>Lesotho &amp; South Africa</b>Two jurisdictions, one deal desk</div>
-        <div><b>Coal · Chrome · Minerals</b>Plus commodity and FMCG distribution</div>
-        <div><b>Verification first</b>Every claim checked at source</div>
-        <div><b>Mine to port</b>Operators, processing and export partners</div>
+        <div><b>FMCG distribution</b>Food staples and consumer goods across Lesotho</div>
+        <div><b>Mining assets</b>Coal, chrome and minerals, verified at source</div>
+        <div><b>Lesotho &amp; South Africa</b>Two jurisdictions, one team</div>
+        <div><b>Border to shelf, mine to port</b>Import, clearing, storage and export</div>
       </div>
     </div>
   </div>
@@ -228,10 +253,17 @@ footer b{color:#C9CDD6;font-weight:500}
   <section id="services">
     <div class="wrap">
       <div class="sec-head">
-        <div><div class="eyebrow">What we do</div><h2>Four lines of business, one standard of diligence</h2></div>
-        <p class="lede">We work where trust is scarce and paperwork decides the outcome. Our job is to get the facts straight, put the right parties in the room, and carry the deal through to delivery.</p>
+        <div><div class="eyebrow">What we do</div><h2>Two businesses, one standard of diligence</h2></div>
+        <p class="lede">We keep shelves stocked across Lesotho, and we bring order to mining deals where trust is scarce and paperwork decides the outcome. In both, our job is to get the facts straight and carry the work through to delivery.</p>
       </div>
       <div class="services">
+        <div class="svc lead">
+          <div class="tag">FMCG &amp; distribution</div>
+          <h3>Food staples and consumer goods for Lesotho</h3>
+          <p>We source, import, clear, store and deliver fast-moving consumer goods to retailers, wholesalers and institutions across Lesotho. For brands entering the country, we act as the local distributor and run the market entry.</p>
+          <ul><li>Multiple product lines, from canned fish and rice to maize meal and sorghum</li><li>Import permits, border clearance and warehousing in Maseru</li><li>Route-to-market through wholesalers, general dealers and supermarkets</li></ul>
+          <a href="#fmcg">See our products and how we distribute →</a>
+        </div>
         <div class="svc">
           <div class="tag">Mining assets</div>
           <h3>Mining asset facilitation</h3>
@@ -254,12 +286,40 @@ footer b{color:#C9CDD6;font-weight:500}
           <a href="#contact">Become a partner →</a>
         </div>
         <div class="svc">
-          <div class="tag">Trade &amp; structuring</div>
-          <h3>Commodity distribution and deal structuring</h3>
-          <p>We lead country entry for consumer goods and staple commodities in Lesotho, and structure the agreements and funding that sit behind cross-border ventures.</p>
-          <ul><li>Distribution and rollout planning in Lesotho</li><li>MOUs, NCNDAs, joint ventures and term sheets</li><li>Funding routes and financial models for facilities</li></ul>
+          <div class="tag">Structuring</div>
+          <h3>Deal structuring and funding</h3>
+          <p>We structure the agreements and funding that sit behind cross-border ventures, from first NDA to the facility that pays for the stock.</p>
+          <ul><li>MOUs, NCNDAs, distribution agreements and joint ventures</li><li>Term sheets and conditions precedent</li><li>Funding routes and financial models for working-capital facilities</li></ul>
           <a href="#contact">Discuss a venture →</a>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="fmcg" class="fmcg">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="eyebrow">FMCG &amp; distribution</div><h2>From supplier to shelf in Lesotho</h2></div>
+        <p class="lede">We import, clear, store and distribute consumer goods and food staples, and we take on Lesotho market entry for brands that want a local partner who knows the ground.</p>
+      </div>
+      <div class="products">
+        <div class="prod"><span class="cat">Canned fish</span><p>Shelf-stable canned fish in retail packs, in tomato and chilli sauces.</p></div>
+        <div class="prod"><span class="cat">Rice</span><p>Fragrant and long-grain rice in retail pouches and bulk bags.</p></div>
+        <div class="prod"><span class="cat">Maize meal</span><p>Lesotho's daily staple, in household and bulk sizes.</p></div>
+        <div class="prod"><span class="cat">Sorghum</span><p>Sorghum meal and grain for households and traditional brewing.</p></div>
+        <div class="prod"><span class="cat">Pantry staples</span><p>Further dry and packaged goods, added as supplier agreements are signed.</p></div>
+        <div class="prod ask"><span class="cat">Your product</span><p>Manufacturers and brand owners: talk to us about distribution in Lesotho.</p><a href="#contact">Propose a product →</a></div>
+      </div>
+      <h3 class="subhead">How we get products to market</h3>
+      <ol class="flow">
+        <li><b>Source</b><span>We buy from manufacturers and brand owners in South Africa, Botswana and further afield, on written supply terms.</span></li>
+        <li><b>Import and clear</b><span>Permits are in hand before goods leave the supplier. Consignments clear at Maseru Bridge or Maputsoe Bridge.</span></li>
+        <li><b>Store</b><span>Stock is held in Maseru and rotated first-in, first-out, with expiry dates tracked.</span></li>
+        <li><b>Deliver</b><span>Set delivery routes to wholesalers, general dealers, supermarkets and institutions, starting in Maseru, Berea and Leribe.</span></li>
+      </ol>
+      <div class="twocol">
+        <div><h3>For brands and manufacturers</h3><ul><li>Exclusive or lead distribution in Lesotho</li><li>Retail listings and in-store presence</li><li>Monthly sell-through reporting by outlet and product</li><li>Pricing and promotions carried out as agreed</li></ul></div>
+        <div><h3>For retailers and wholesalers</h3><ul><li>Reliable supply of fast-moving lines</li><li>Regular deliveries on set routes</li><li>Orders by phone or email</li><li>Mixed loads across our product range</li></ul></div>
       </div>
     </div>
   </section>
@@ -329,7 +389,7 @@ footer b{color:#C9CDD6;font-weight:500}
       <div class="body">
         <div class="eyebrow" style="margin-bottom:12px">About Tafari Capital</div>
         <h2 style="margin-bottom:24px">Generational Sovereignty</h2>
-        <p>Tafari Capital (Pty) Ltd was incorporated in the Kingdom of Lesotho in November 2021. We are a Basotho-owned investment and facilitation house working across Lesotho and South Africa.</p>
+        <p>Tafari Capital (Pty) Ltd was incorporated in the Kingdom of Lesotho in November 2021. We are a Basotho-owned trade, distribution and investment house working across Lesotho and South Africa.</p>
         <p>Our name and seal carry one idea: that the value in Africa's land and markets should build lasting wealth for the people and families who hold it. We pursue that through careful deal work, honest verification and partnerships that hold up over time.</p>
         <dl class="registry">
           <dt>Company number</dt><dd>78585 (Lesotho)</dd>
@@ -351,7 +411,7 @@ footer b{color:#C9CDD6;font-weight:500}
     <div class="wrap grid">
       <div>
         <div class="eyebrow">Contact</div>
-        <h2>Bring us an asset, a mandate or a question</h2>
+        <h2>Bring us a product, an order or an asset</h2>
         <p class="lede">Tell us what you hold or what you are looking for. We respond to every serious enquiry, and we will tell you plainly if it is not a fit.</p>
         <dl class="cdetails">
           <div><dt>Email</dt><dd><a href="mailto:phafanep@gmail.com" id="emailLink">phafanep@gmail.com</a></dd></div>
@@ -363,9 +423,9 @@ footer b{color:#C9CDD6;font-weight:500}
         <div class="f"><label for="cname">Your name</label><input id="cname" name="name" required autocomplete="name"></div>
         <div class="f"><label for="corg">Company</label><input id="corg" name="company" autocomplete="organization"></div>
         <div class="f"><label for="cemail">Email</label><input id="cemail" name="email" type="email" required autocomplete="email"></div>
-        <div class="f"><label for="crole">I am</label><select id="crole" name="role"><option>An asset owner</option><option>A buyer or investor</option><option>A service partner</option><option>Other</option></select></div>
+        <div class="f"><label for="crole">I am</label><select id="crole" name="role"><option>A retailer or wholesaler</option><option>A supplier or brand owner</option><option>A mining asset owner</option><option>A buyer or investor</option><option>A service partner</option><option>Other</option></select></div>
         <div class="f"><label for="ccountry">Country</label><select id="ccountry" name="country"><option>Lesotho</option><option>South Africa</option><option>Other</option></select></div>
-        <div class="f"><label for="ccom">Commodity</label><input id="ccom" name="commodity" placeholder="e.g. Chrome"></div>
+        <div class="f"><label for="ccom">Product or commodity</label><input id="ccom" name="commodity" placeholder="e.g. Rice, or Chrome"></div>
         <div class="f full"><label for="cmsg">How can we help?</label><textarea id="cmsg" name="message" required></textarea></div>
         <p class="formnote">Sending opens your email app with this enquiry filled in. Please do not include technical data or confidential documents until an NCNDA is in place.</p>
         <div class="f full" style="flex-direction:row;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn gold" type="submit">Send enquiry</button></div>
@@ -392,7 +452,7 @@ document.getElementById("enquiry").addEventListener("submit",e=>{
   const d=Object.fromEntries(new FormData(f).entries());
   if(!d.name||!d.email||!d.message){msg.textContent="Please add your name, email and a short message.";return;}
   const subject=`Enquiry from ${d.name}${d.company?" ("+d.company+")":""}: ${d.role}`;
-  const body=`Name: ${d.name}\nCompany: ${d.company||"-"}\nEmail: ${d.email}\nRole: ${d.role}\nCountry: ${d.country}\nCommodity: ${d.commodity||"-"}\n\n${d.message}`;
+  const body=`Name: ${d.name}\nCompany: ${d.company||"-"}\nEmail: ${d.email}\nRole: ${d.role}\nCountry: ${d.country}\nProduct / commodity: ${d.commodity||"-"}\n\n${d.message}`;
   location.href=`mailto:${TO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   msg.textContent=`Your email app should open now. If it does not, write to ${TO}.`;
 });

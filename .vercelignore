@@ -1,0 +1,13 @@
+.env*
+.git
+.agents
+node_modules
+.next
+tests
+test-results
+playwright-report
+index.html
+exchange
+assets
+scripts
+*.zip

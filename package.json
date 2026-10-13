@@ -1,0 +1,46 @@
+{
+  "name": "tafari-capital",
+  "version": "1.0.0",
+  "description": "Tafari Capital website, Exchange and back office",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "node scripts/migrate.mjs",
+    "test": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/citizen-bnk/tafari-capital.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/citizen-bnk/tafari-capital/issues"
+  },
+  "homepage": "https://github.com/citizen-bnk/tafari-capital#readme",
+  "dependencies": {
+    "@neondatabase/auth": "0.6.0-beta",
+    "@neondatabase/serverless": "1.2.0",
+    "@vercel/blob": "2.8.1",
+    "lucide-react": "1.55.0",
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "dotenv": "18.0.7",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  },
+  "private": true
+}

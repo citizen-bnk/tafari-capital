@@ -1,56 +1,95 @@
 # Tafari Capital
 
-Website for **Tafari Capital (Pty) Ltd** and the **Tafari Minerals Exchange** prototype.
+Multi-page company website, Minerals Exchange and Tafari back office.
 
-| Path | What it is |
-|---|---|
-| `index.html` | Company website: services, the Exchange, how we work, about, contact |
-| `exchange/index.html` | Tafari Minerals Exchange: listings and verification, buyers and deal room, tokenization, partners, offtake and logistics, integrations |
-| `assets/` | Lion mark, Generational Sovereignty seal, favicon |
+## Stack
 
-Both are static HTML, CSS and JavaScript with no build step.
+- Next.js 16.4 App Router, React 19.3 and TypeScript.
+- Neon PostgreSQL and managed Neon Auth: email/password, verification codes and recovery.
+- Private Vercel Blob storage, direct browser uploads and authorized downloads.
+- Zod server validation and Playwright workflow/authorization tests.
+- Exact dependency versions and a lockfile for repeatable builds.
 
-## Run locally
+## Pages
 
-```bash
-python3 -m http.server 8000
-# open http://localhost:8000
+Public: `/`, `/services`, `/about`, `/how-it-works`, `/contact`, `/exchange`, `/exchange/:id`, `/privacy`, `/terms`.
+
+Accounts: `/auth/sign-up`, `/auth/sign-in`, `/auth/verify-email`, `/auth/forgot-password`, `/auth/reset-password`.
+
+Workspace: `/dashboard`, `/dashboard/profile`, `/dashboard/listings/new`, `/dashboard/listings/:id`, `/dashboard/deals/:id`.
+
+Administration: `/back-office` with asset review, transactions, users, documents, enquiries and audit history. Records support search and pagination.
+
+## Owner-to-sale workflow
+
+1. Participants register and verify email. Unverified users can view their workspace but cannot submit listings, offers or documents.
+2. An owner creates a draft, uploads title/right evidence and a signed mandate, confirms authority and submits for review.
+3. Tafari inspects the evidence and approves publication, requests changes or withdraws the listing.
+4. Buyers submit offers. An owner or Tafari accepts one offer, reserving the asset and declining remaining pending offers.
+5. Participants discuss the transaction in a private deal room. Owners and staff explicitly grant/revoke individual document access after confidentiality agreements are in place.
+6. Tafari records diligence, agreements, regulatory approvals, closing and completion. Only Tafari can mark a sale completed. Acceptance does not transfer ownership or collect payment.
+
+There are no seeded business records or browser-local data fallbacks.
+
+## Super administrator
+
+`phafanep@gmail.com` is the designated super administrator, with access to all listings, deals, documents, enquiries and audit records, plus staff-role assignment and participant suspension. This privilege requires a valid session and the authentication provider's verified email. The user chooses their password during registration/recovery. No administrator password is stored in source.
+
+The designated super administrator cannot be demoted or suspended through the application. Staff can operate the deal desk but cannot change user permissions. Every private API checks authentication, email verification, suspension and resource ownership independently of the interface.
+
+## Local setup
+
+Use Node.js 22 or 24 and npm. Link the existing `smart-my-co/tafari-capital` Vercel project; do not create another database or store.
+
+```sh
+npm ci
+vercel link --scope smart-my-co --project tafari-capital
+vercel env pull .env.local --scope smart-my-co
 ```
 
-## Domain
+Required keys are in `.env.example`. Generate a separate local `NEON_AUTH_COOKIE_SECRET` if a secret cannot be pulled. Never print or commit credentials. `SUPER_ADMIN_EMAIL` defaults to the address above.
 
-The site is set up for **https://tafaricapital.co.ls** (see `CNAME`). The Exchange is at `/exchange/`.
+```sh
+npm run db:migrate
+npm run dev
+npm run build
+npm run typecheck
+```
 
-For GitHub Pages, point the domain's DNS at GitHub with the domain registrar:
+Migration `migrations/001_platform.sql` is versioned and applied atomically using the direct/unpooled connection. Test future migrations on an isolated database branch before applying them to production.
 
-- `A` records for `tafaricapital.co.ls` → `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-- `CNAME` record for `www` → `citizen-bnk.github.io`
+## Tests
 
-Then enter the domain under **Settings → Pages → Custom domain** and tick **Enforce HTTPS**.
+```sh
+npx playwright install chromium
+npm test
+```
 
-## Publish
+The suite uses disposable accounts/assets, uploads tiny files to the real private store, tests cross-user access and completes a managed sale. Cleanup removes only those fixtures. For ongoing CI, use an isolated database and Blob store; do not run against existing production business data.
 
-Any static host works (GitHub Pages, Netlify, Cloudflare Pages, or the existing web host).
-For GitHub Pages: **Settings → Pages → Deploy from a branch → `main` / root**.
-GitHub Pages on a private repository needs a paid GitHub plan.
+The local test server temporarily designates a disposable fixture as super administrator. Production defaults to `phafanep@gmail.com`. Disposable users are verified through the database to avoid reading a mailbox; real email delivery must be tested separately before launch. Credential traces/screenshots are disabled.
 
-## The Exchange: data storage
+## Private files
 
-The Exchange keeps its records through a small Firestore-style data layer
-(`collection().onSnapshot`, `doc().set / update / delete`).
+Allowed: PDF, JPEG, PNG, WEBP, DOCX, XLSX; 20 MB per file, up to 30 files per asset. Files are private. Authorized downloads use attachment disposition and `no-store`. Upload tokens are scoped to one new pathname, allowed type/size and a short expiry based on the storage service clock. Final metadata is checked before a document becomes ready.
 
-- **On claude.ai** it uses the shared artifact database, so the Tafari team works on one register.
-- **Anywhere else** (this repository, GitHub Pages) it runs in **demo mode** and saves to the
-  browser's local storage only. Nothing is shared between people or devices.
+## Production setup
 
-Before owners, buyers or staff use it in production, replace `makeLocalDB()` in
-`exchange/index.html` with a hosted backend (for example Firebase/Firestore or Supabase)
-and add sign-in with roles for Tafari staff, owners, buyers and partners. The rest of the
-application code does not need to change.
+`vercel.json` defines the Next.js build. Resources exist in the Smart My Company team:
 
-## Still to do before going live
+- `tafari-capital-db`: Neon PostgreSQL and managed authentication, Frankfurt.
+- `tafari-capital-documents`: private Vercel Blob storage, Cape Town.
+- Proposed email domain: `tafaricapital.co.ls`.
 
-- Confirm the contact email and phone in `index.html` (currently the founder's details).
-- Connect a shared database and user accounts for the Exchange.
-- Legal review of the website disclaimer and the tokenization wording (FSCA, Central Bank of Lesotho, MPRDA s11).
-- POPIA and Lesotho Data Protection Act 2011 privacy notice before collecting owner or buyer data.
+Resend's Marketplace installation is authorized, but the free resource plan is disabled. A paid plan requires authorization, or a separate free account must be configured manually. Verify the sender DNS and connect Resend SMTP to Neon Auth before public launch. Shared Neon SMTP is for setup; test real verification and password-recovery delivery with the final sender.
+
+Register exact production origins in Neon Auth's trusted-domain list. Test signup, verification, login, reload, recovery and sign-out on the live origin. Configure the custom domain in Vercel and DNS if `tafaricapital.co.ls` is to be used. The `.vercel.app` origin is independent.
+
+Vercel's GitHub integration is not connected; use authenticated CLI releases until it is. Stage a production build, verify, then promote:
+
+```sh
+vercel deploy --prod --skip-domain --scope smart-my-co
+vercel promote <verified-deployment-url> --scope smart-my-co
+```
+
+Enquiries are stored in the back office. Sale notification emails are not silently sent before a verified mail provider is connected. Review the privacy notice, platform terms and transaction documents with Tafari before inviting participants; keep restore retention and cloud usage limits appropriate to the business.

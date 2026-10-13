@@ -81,9 +81,13 @@ Allowed: PDF, JPEG, PNG, WEBP, DOCX, XLSX; 20 MB per file, up to 30 files per as
 - `tafari-capital-documents`: private Vercel Blob storage, Cape Town.
 - Proposed email domain: `tafaricapital.co.ls`.
 
-Resend's Marketplace installation is authorized, but the free resource plan is disabled. A paid plan requires authorization, or a separate free account must be configured manually. Verify the sender DNS and connect Resend SMTP to Neon Auth before public launch. Shared Neon SMTP is for setup; test real verification and password-recovery delivery with the final sender.
+Resend's Marketplace free resource plan is disabled; no paid plan was purchased. The user chose the separate free-account path, and `tafaricapital.co.ls` has been added in the existing Resend account. The domain is not registered yet. Its DNS verification and custom SMTP remain pending registration. Verify the sender DNS and connect Resend SMTP to Neon Auth before public rollout. Shared Neon SMTP is for setup; test real verification and password-recovery delivery with the final sender.
 
-Register exact production origins in Neon Auth's trusted-domain list. Test signup, verification, login, reload, recovery and sign-out on the live origin. Configure the custom domain in Vercel and DNS if `tafaricapital.co.ls` is to be used. The `.vercel.app` origin is independent.
+The exact production origins `https://tafari-capital.vercel.app` and `https://tafari-capital-smart-my-co.vercel.app`, plus the verified staged deployment origin, are saved in Neon Auth's trusted-domain list. Authentication branding is Tafari Capital. Live registration succeeds, and private APIs reject anonymous requests. Verify actual mailbox delivery before public rollout. Configure the custom domain and DNS after registration; the `.vercel.app` origin works independently.
+
+## Published release
+
+The application is live at [tafari-capital.vercel.app](https://tafari-capital.vercel.app/). [PR #1](https://github.com/citizen-bnk/tafari-capital/pull/1) is merged into `main`. The verified production application build is `05bb9ab`; subsequent documentation changes do not change that build.
 
 Vercel's GitHub integration is not connected; use authenticated CLI releases until it is. Stage a production build, verify, then promote:
 

@@ -6,8 +6,5 @@ node_modules
 tests
 test-results
 playwright-report
-index.html
-exchange
-assets
 scripts
 *.zip

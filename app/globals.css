@@ -1620,3 +1620,22 @@ td small {
     scroll-behavior: auto !important;
   }
 }
+.demo-selector { margin-top: 28px; border-top: 1px solid #d7dbd3; padding-top: 22px; }
+.demo-selector summary { cursor: pointer; font-weight: 700; line-height: 1.6; }
+.demo-selector summary span { display: block; font-size: 12px; color: #5a6657; }
+.demo-selector > p { font-size: 13px; line-height: 1.7; margin: 16px 0; }
+.demo-filters { display: grid; gap: 12px; margin: 18px 0; }
+.demo-accounts { max-height: 480px; overflow: auto; overscroll-behavior: contain; border: 1px solid #d7dbd3; border-radius: 8px; }
+.demo-account { padding: 16px; border-bottom: 1px solid #e1e5dc; display: grid; gap: 12px; }
+.demo-account:last-child { border-bottom: 0; }
+.demo-account strong, .demo-account small { display: block; overflow-wrap: anywhere; }
+.demo-account small { font-size: 11px; color: #60685d; margin-top: 5px; }
+.demo-account p { font-size: 12px; line-height: 1.6; margin: 8px 0 0; }
+.demo-account .btn { justify-self: start; }
+.demo-status { font-weight: 700; }
+.demo-banner { background: #f3e6bc; color: #253222; border-bottom: 1px solid #d7c790; }
+.demo-banner > div { display: flex; gap: 20px; align-items: center; justify-content: space-between; padding-top: 14px; padding-bottom: 14px; }
+.demo-banner p { font-size: 13px; margin: 0; }
+.demo-banner small { display: block; font-size: 11px; margin-top: 5px; }
+.demo-banner a, .demo-banner button { font: inherit; font-size: 12px; color: inherit; text-decoration: underline; background: transparent; border: 0; cursor: pointer; padding: 4px 0; }
+@media (max-width: 700px) { .demo-banner > div { align-items: start; flex-direction: column; gap: 8px; } }

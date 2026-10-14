@@ -44,6 +44,8 @@ export type Document = {
   created_at: string;
 };
 export type User = {
+  demo?: boolean;
+  organization_type?: string;
   id: string;
   name: string;
   email: string;

@@ -1,5 +1,6 @@
 import { getAuth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
+import { readDemoSession, InvalidDemoSession } from "@/lib/demo/session";
 export class HttpError extends Error {
   constructor(
     public status: number,
@@ -15,11 +16,42 @@ export type Actor = {
   role: string;
   status: string;
   verified: boolean;
+  demo?: boolean;
 };
 export function isAdmin(actor: Actor) {
   return ["staff", "super_admin"].includes(actor.role);
 }
 export async function actor(requireVerified = true): Promise<Actor> {
+  let demo;
+  try {
+    demo = await readDemoSession();
+  } catch (e) {
+    if (e instanceof InvalidDemoSession) throw new HttpError(401, e.message);
+    throw e;
+  }
+  if (demo) {
+    const [profile] = await db()`SELECT * FROM profiles WHERE id=${demo.id}`;
+    if (!profile) throw new HttpError(401, "Demo account is unavailable.");
+    if (profile.status !== "active")
+      throw new HttpError(
+        403,
+        "This demo account is suspended. Select another demo account to continue.",
+      );
+    if (requireVerified && !profile.demo_verified)
+      throw new HttpError(
+        403,
+        "This demo account illustrates an unverified email. Select a verified demo account to submit changes.",
+      );
+    return {
+      id: profile.id,
+      email: profile.email,
+      name: profile.name,
+      role: profile.role,
+      status: profile.status,
+      verified: profile.demo_verified,
+      demo: true,
+    };
+  }
   const { data: session } = await getAuth().getSession();
   if (!session?.user) throw new HttpError(401, "Please sign in to continue.");
   const user = session.user;

@@ -69,6 +69,28 @@ The suite uses disposable accounts/assets, uploads tiny files to the real privat
 
 The local test server temporarily designates a disposable fixture as super administrator. Production defaults to `phafanep@gmail.com`. Disposable users are verified through the database to avoid reading a mailbox; real email delivery must be tested separately before launch. Credential traces/screenshots are disabled.
 
+## Demo accounts and working examples
+
+On the sign-in page, expand **Explore with a demo account**, filter by role or company, and select **Try account**. No passwords or embedded credentials are distributed. New real users continue to register and verify their email; their accounts never appear in the curated demo selector.
+
+The fictional baseline has **21 buyers, 41 sellers and all six roles**, for **67 accounts**, including a suspended owner and an unverified buyer. It includes 40 assets, 55 offers, 220 synthetic document records, 75 deal messages, 12 enquiries and review/audit history. Organization types cover sole proprietors, partnerships, cooperatives, private companies, regional groups and multinationals.
+
+Examples span draft evidence gaps, submission, requested corrections, approval, withdrawal, competing/pending/declined/withdrawn offers, accepted diligence, agreements, regulatory approvals, closing, completion and cancellation. Currency examples cover LSL, ZAR and USD, with full sales, partial stakes, joint ventures and offtake structures. Prices, mineral rights, organizations and files are fictional.
+
+Demo access uses a separate signed, HttpOnly, same-site session with a two-hour expiry. Every database query in that session runs in the `tafari_demo` schema using a transaction-local search path with no `public` fallback. Roles and grants are read from the demo database; no role value supplied by the browser grants access. Demo administrators can manage only that schema. Invalid/expired demo cookies fail closed. Successful real sign-in or registration clears the demo session.
+
+Demo changes are shared among demo visitors and persist. Demo evidence is generated on demand as clearly labelled synthetic PDFs, with normal document permissions and grants. Demo accounts cannot obtain cloud-upload tokens or download/delete real Blob files. Use real accounts for actual file uploads. The designated real super admin remains `phafanep@gmail.com`; the demo administrator is a separate fictional identity.
+
+To provision or add missing baseline records, run:
+
+```sh
+npm run db:seed-demo
+```
+
+The seed creates its own complete schema and foreign-key graph atomically, then inserts deterministic records with conflict handling. Reruns preserve demo changes and do not copy, update or delete live data. There is no public reset endpoint. Run the seed with the direct database connection in `.env.local`; never print connection credentials.
+
+Browser tests cover every role, mobile filtering, canary checks against real-scope records, invalid and expired sessions, suspended/unverified accounts, synthetic evidence, review, offers, grants, closing and audit. Test-created assets and canaries are removed after the run.
+
 ## Private files
 
 Allowed: PDF, JPEG, PNG, WEBP, DOCX, XLSX; 20 MB per file, up to 30 files per asset. Files are private. Authorized downloads use attachment disposition and `no-store`. Upload tokens are scoped to one new pathname, allowed type/size and a short expiry based on the storage service clock. Final metadata is checked before a document becomes ready.

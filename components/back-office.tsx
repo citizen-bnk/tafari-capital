@@ -328,6 +328,7 @@ export function BackOffice() {
                               {u.email}
                               <br />
                               {u.company} {u.phone}
+                              {u.organization_type && <><br />{u.organization_type} · Fictional demo organization</>}
                             </small>
                           </td>
                           <td>

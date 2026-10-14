@@ -3,6 +3,7 @@ import { upload } from "@vercel/blob/client";
 import { useState } from "react";
 import { api } from "@/lib/client";
 import { ErrorBox } from "@/components/ui";
+import { useAppSession } from "@/components/app-session";
 export function DocumentUpload({
   listingId,
   onUploaded,
@@ -10,6 +11,7 @@ export function DocumentUpload({
   listingId: string;
   onUploaded: () => void;
 }) {
+  const { demo } = useAppSession();
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [progress, setProgress] = useState(0);
@@ -25,6 +27,15 @@ export function DocumentUpload({
         setError("");
         setProgress(0);
         try {
+          if (demo) {
+            await api("documents/sample", {
+              listing_id: listingId,
+              kind: f.get("kind"),
+            });
+            form.reset();
+            onUploaded();
+            return;
+          }
           if (!file || !file.size) throw new Error("Choose a file.");
           if (file.size > 20 * 1024 * 1024)
             throw new Error("Files must be 20 MB or smaller.");
@@ -65,25 +76,34 @@ export function DocumentUpload({
           <option value="other">Other evidence</option>
         </select>
       </label>
-      <label>
-        Choose file
-        <input
-          name="file"
-          type="file"
-          required
-          accept=".pdf,.jpg,.jpeg,.png,.webp,.docx,.xlsx"
-        />
-      </label>
+      {!demo && (
+        <label>
+          Choose file
+          <input
+            name="file"
+            type="file"
+            required
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.docx,.xlsx"
+          />
+        </label>
+      )}
       <div className="full">
         <small className="muted">
-          Private storage · PDF, JPG, PNG, WEBP, DOCX, XLSX · Maximum 20 MB per
-          file
+          {demo
+            ? "Demo: add a synthetic PDF to practice the evidence workflow. Register to upload your own files."
+            : "Private storage · PDF, JPG, PNG, WEBP, DOCX, XLSX · Maximum 20 MB per file"}
         </small>
         <ErrorBox message={error} />
       </div>
       <div className="full actions">
         <button className="btn dark" disabled={busy}>
-          {busy ? `Uploading ${progress}%…` : "Upload document ↑"}
+          {busy
+            ? demo
+              ? "Adding sample…"
+              : `Uploading ${progress}%…`
+            : demo
+              ? "Add sample document ↑"
+              : "Upload document ↑"}
         </button>
         {busy && (
           <span className="muted">

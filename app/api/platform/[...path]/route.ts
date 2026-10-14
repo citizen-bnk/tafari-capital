@@ -14,6 +14,8 @@ import {
 import { listingSchema, uuid, money, fileSchema } from "@/lib/validation";
 import { head, del } from "@vercel/blob";
 import { randomUUID } from "node:crypto";
+import { demoSuperAdminId } from "@/lib/demo/accounts";
+import { sampleDocument } from "@/lib/demo/document";
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ path: string[] }> };
 export async function GET(request: Request, context: Context) {
@@ -371,6 +373,11 @@ export async function POST(request: Request, context: Context) {
       return Response.json({ ok: true });
     }
     if (path[0] === "documents" && path[1] === "init") {
+      if (a.demo)
+        throw new HttpError(
+          403,
+          "Use a synthetic sample document in the demo. Register to upload your own files.",
+        );
       const v = fileSchema.parse(data);
       const [l] =
         await sql`SELECT id,owner_id FROM listings WHERE id=${v.listing_id} AND (owner_id=${a.id} OR ${isAdmin(a)})`;
@@ -385,6 +392,38 @@ export async function POST(request: Request, context: Context) {
       await sql`INSERT INTO documents(id,listing_id,owner_id,name,kind,pathname,size,content_type) VALUES (${id},${v.listing_id},${l.owner_id},${v.name},${v.kind},${pathname},${v.size},${v.content_type})`;
       return Response.json({ id, pathname }, { status: 201 });
     }
+    if (path[0] === "documents" && path[1] === "sample") {
+      if (!a.demo)
+        throw new HttpError(
+          403,
+          "Sample evidence is available only in the demo.",
+        );
+      const v = z
+        .object({
+          listing_id: uuid,
+          kind: z.enum([
+            "title",
+            "mandate",
+            "technical",
+            "company",
+            "photo",
+            "other",
+          ]),
+        })
+        .parse(data);
+      const [listing] =
+        await sql`SELECT id,owner_id FROM listings WHERE id=${v.listing_id} AND (owner_id=${a.id} OR ${isAdmin(a)})`;
+      if (!listing) throw new HttpError(404, "Listing not found.");
+      const [count] =
+        await sql`SELECT count(*) FROM documents WHERE listing_id=${v.listing_id} AND state<>'deleted'`;
+      if (Number(count.count) >= 30)
+        throw new HttpError(400, "A listing can have up to 30 documents.");
+      const id = randomUUID(),
+        name = `DEMO ${v.kind} evidence.pdf`;
+      await sql`INSERT INTO documents(id,listing_id,owner_id,name,kind,pathname,size,content_type,state) VALUES (${id},${v.listing_id},${listing.owner_id},${name},${v.kind},${`demo-synthetic/${v.listing_id}/${id}.pdf`},${sampleDocument(name).length},'application/pdf','ready')`;
+      await audit(a, "demo_sample_added", "document", id);
+      return Response.json({ id }, { status: 201 });
+    }
     if (path[0] === "documents") {
       const id = uuid.parse(path[1]),
         action = z.enum(["complete", "delete"]).parse(data.action);
@@ -392,6 +431,11 @@ export async function POST(request: Request, context: Context) {
         await sql`SELECT * FROM documents WHERE id=${id} AND state<>'deleted' AND (owner_id=${a.id} OR ${isAdmin(a)})`;
       if (!d) throw new HttpError(404, "File not found.");
       if (action === "complete") {
+        if (a.demo)
+          throw new HttpError(
+            403,
+            "Synthetic demo documents do not use cloud uploads.",
+          );
         const blob = await head(d.pathname);
         if (blob.size !== Number(d.size) || blob.contentType !== d.content_type)
           throw new HttpError(
@@ -411,10 +455,12 @@ export async function POST(request: Request, context: Context) {
             "Return the asset to draft before removing supporting evidence.",
           );
         await sql`UPDATE documents SET state='deleted' WHERE id=${id}`;
-        try {
-          await del(d.pathname);
-        } catch {
-          console.error("Blob cleanup pending for document", id);
+        if (!a.demo) {
+          try {
+            await del(d.pathname);
+          } catch {
+            console.error("Blob cleanup pending for document", id);
+          }
         }
       }
       await audit(a, "document_" + action, "document", id);
@@ -434,8 +480,11 @@ export async function POST(request: Request, context: Context) {
         const [u] = await sql`SELECT * FROM profiles WHERE id=${v.id}`;
         if (!u) throw new HttpError(404, "User not found.");
         if (
+          (a.demo && u.id === demoSuperAdminId) ||
           u.email.toLowerCase() ===
-          (process.env.SUPER_ADMIN_EMAIL || "phafanep@gmail.com").toLowerCase()
+            (
+              process.env.SUPER_ADMIN_EMAIL || "phafanep@gmail.com"
+            ).toLowerCase()
         )
           throw new HttpError(
             400,

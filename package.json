@@ -9,6 +9,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "db:migrate": "node scripts/migrate.mjs",
+    "db:seed-demo": "tsx scripts/seed-demo.ts",
     "test": "playwright test"
   },
   "repository": {

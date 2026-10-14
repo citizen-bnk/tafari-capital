@@ -18,6 +18,7 @@ export async function POST(request: Request) {
       onBeforeGenerateToken: async (pathname) => {
         sameOrigin(request);
         const a = await actor();
+        if (a.demo) throw new HttpError(403, "Demo accounts use synthetic evidence. Register to upload your own files.");
         await rateLimit("upload:" + a.id, 15);
         const [d] =
           await db()`SELECT * FROM documents WHERE pathname=${pathname} AND state='pending' AND (owner_id=${a.id} OR ${isAdmin(a)}) AND created_at>now()-interval '1 hour'`;

@@ -5,6 +5,10 @@ const config: NextConfig = {
   async headers() {
     return [
       {
+        source: "/api/platform/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },

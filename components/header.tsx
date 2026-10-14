@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Menu, X, ArrowUpRight } from "lucide-react";
-import { authClient } from "@/lib/auth/client";
+import { useAppSession } from "@/components/app-session";
 const links = [
   ["/", "Home"],
   ["/services", "Services"],
@@ -17,7 +17,7 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const path = usePathname(),
     router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending, signOut } = useAppSession();
   return (
     <>
       <a className="skip" href="#main">
@@ -67,7 +67,7 @@ export function Header() {
                 <button
                   className="nav-signout"
                   onClick={async () => {
-                    await authClient.signOut();
+                    await signOut();
                     setOpen(false);
                     router.push("/");
                     router.refresh();

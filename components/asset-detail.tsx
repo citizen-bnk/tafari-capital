@@ -3,14 +3,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, useResource } from "@/lib/client";
-import { authClient } from "@/lib/auth/client";
+import { useAppSession } from "@/components/app-session";
 import { Listing, price } from "@/lib/types";
 import { PageIntro, Badge, ErrorBox, Loading } from "@/components/ui";
 export function AssetDetail({ id }: { id: string }) {
   const { data, error, loading } = useResource<{ listing: Listing }>(
     "listings/" + id,
   );
-  const { data: session } = authClient.useSession();
+  const { data: session } = useAppSession();
   const [offerError, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const router = useRouter();

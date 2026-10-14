@@ -2,6 +2,7 @@ import { get } from "@vercel/blob";
 import { actor, isAdmin, HttpError, errorResponse, audit } from "@/lib/access";
 import { db } from "@/lib/db";
 import { uuid } from "@/lib/validation";
+import { sampleDocument } from "@/lib/demo/document";
 export const dynamic = "force-dynamic";
 export async function GET(
   request: Request,
@@ -17,6 +18,25 @@ export async function GET(
         404,
         "File not found or access has not been granted.",
       );
+    if (a.demo) {
+      if (!d.pathname.startsWith("demo-synthetic/"))
+        throw new HttpError(404, "Sample file not found.");
+      await audit(
+        a,
+        "document_downloaded",
+        "document",
+        id,
+        "Synthetic demo evidence",
+      );
+      return new Response(new Uint8Array(sampleDocument(d.name)), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${d.name.replace(/[^a-zA-Z0-9._-]/g, "_")}"`,
+          "Cache-Control": "private, no-store",
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
+    }
     const blob = await get(d.pathname, { access: "private" });
     if (!blob || blob.statusCode !== 200)
       throw new HttpError(404, "File not found.");

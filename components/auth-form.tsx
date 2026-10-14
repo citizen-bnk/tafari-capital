@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth/client";
 import { ErrorBox } from "@/components/ui";
+import { DemoSelector } from "@/components/demo-selector";
+import { useAppSession } from "@/components/app-session";
 const titles: Record<string, string> = {
   "sign-in": "Welcome back.",
   "sign-up": "Join the Exchange.",
@@ -12,6 +14,7 @@ const titles: Record<string, string> = {
   "reset-password": "Set a new password.",
 };
 export function AuthForm({ mode }: { mode: string }) {
+  const { demo } = useAppSession();
   const router = useRouter(),
     params = useSearchParams();
   const [error, setError] = useState(""),
@@ -23,6 +26,10 @@ export function AuthForm({ mode }: { mode: string }) {
     setBusy(true);
     setError("");
     try {
+      if (demo)
+        throw new Error(
+          "Demo email verification is simulated. Leave the demo to verify your real account.",
+        );
       const r = await authClient.emailOtp.sendVerificationOtp({
         email,
         type: "email-verification",
@@ -71,11 +78,14 @@ export function AuthForm({ mode }: { mode: string }) {
                   callbackURL: location.origin + "/dashboard",
                 });
                 if (r.error) throw new Error(r.error.message);
-                router.push(
+                window.location.assign(
                   "/auth/verify-email?email=" + encodeURIComponent(email),
                 );
-                router.refresh();
               } else if (mode === "verify-email") {
+                if (demo)
+                  throw new Error(
+                    "Demo email verification is simulated. Leave the demo to verify your real account.",
+                  );
                 const r = await authClient.emailOtp.verifyEmail({
                   email,
                   otp: String(f.get("otp")),
@@ -107,8 +117,7 @@ export function AuthForm({ mode }: { mode: string }) {
               } else {
                 const r = await authClient.signIn.email({ email, password });
                 if (r.error) throw new Error(r.error.message);
-                router.push("/dashboard");
-                router.refresh();
+                window.location.assign("/dashboard");
               }
             } catch (x) {
               setError((x as Error).message);
@@ -216,6 +225,7 @@ export function AuthForm({ mode }: { mode: string }) {
           Tafari staff: sign in with your verified staff email, then open the
           back office from your workspace.
         </p>
+        {mode === "sign-in" && <DemoSelector />}
       </div>
     </div>
   );

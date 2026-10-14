@@ -6,6 +6,7 @@ import { api, useResource } from "@/lib/client";
 import { useAppSession } from "@/components/app-session";
 import { Listing, price } from "@/lib/types";
 import { PageIntro, Badge, ErrorBox, Loading } from "@/components/ui";
+import { CompanyIdentity } from "@/components/company-identity";
 export function AssetDetail({ id }: { id: string }) {
   const { data, error, loading } = useResource<{ listing: Listing }>(
     "listings/" + id,
@@ -35,6 +36,7 @@ export function AssetDetail({ id }: { id: string }) {
           <div className="panel">
             <p className="eyebrow">The opportunity</p>
             <h2>Asset overview</h2>
+            <CompanyIdentity id={l.demo_owner_id} />
             <p className="detail-description">{l.description}</p>
             <div className="notice">
               Supporting documents are private. Submit an offer and use the deal

@@ -5,6 +5,7 @@ import { useResource } from "@/lib/client";
 import { recordStatus, recordStatuses } from "@/lib/navigation";
 import { Listing, Offer, date, label, price } from "@/lib/types";
 import { Badge, Empty, ErrorBox, Loading, PageIntro } from "@/components/ui";
+import { CompanyIdentity } from "@/components/company-identity";
 export function WorkspaceRecords({ view }: { view: "listings" | "offers" }) {
   const params = useSearchParams(),
     router = useRouter(),
@@ -123,6 +124,7 @@ export function WorkspaceRecords({ view }: { view: "listings" | "offers" }) {
                           <tr key={l.id}>
                             <td>
                               <strong>{l.title}</strong>
+                              <CompanyIdentity id={l.owner_id} />
                               <small>
                                 {l.commodity} · {l.country}
                               </small>
@@ -148,6 +150,7 @@ export function WorkspaceRecords({ view }: { view: "listings" | "offers" }) {
                           <tr key={o.id}>
                             <td>
                               <strong>{o.title}</strong>
+                              <CompanyIdentity id={o.buyer_id} />
                               <small>
                                 {o.buyer_name} · {date(o.created_at)}
                               </small>

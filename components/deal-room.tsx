@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { api, useResource } from "@/lib/client";
 import {
   Offer,
@@ -11,6 +12,7 @@ import {
   label,
 } from "@/lib/types";
 import { PageIntro, Badge, ErrorBox, Loading, Empty } from "@/components/ui";
+import { CompanyIdentity } from "@/components/company-identity";
 const stages = [
   "Due diligence",
   "Agreements",
@@ -57,6 +59,10 @@ export function DealRoom({ id }: { id: string }) {
         {price(o.amount, o.currency)} · Buyer: {o.buyer_name} · Submitted{" "}
         {date(o.created_at)}
       </PageIntro>
+      <div className="deal-companies">
+        <CompanyIdentity id={o.owner_id} />
+        <CompanyIdentity id={o.buyer_id} />
+      </div>
       <ErrorBox message={saveError} />
       <div className="detail-grid">
         <div>
@@ -225,6 +231,12 @@ export function DealRoom({ id }: { id: string }) {
                       <small>{label(d.kind)}</small>
                     </div>
                     <div className="actions">
+                      <Link
+                        className="btn outline small"
+                        href={"/dashboard/documents/" + d.id}
+                      >
+                        View ↗
+                      </Link>
                       <a
                         className="btn outline small"
                         href={"/api/documents/" + d.id}

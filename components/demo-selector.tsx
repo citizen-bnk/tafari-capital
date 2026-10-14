@@ -3,6 +3,7 @@ import { useState } from "react";
 import { demoAccounts, demoRoles } from "@/lib/demo/accounts";
 import { ErrorBox } from "@/components/ui";
 import { label } from "@/lib/types";
+import { CompanyIdentity } from "@/components/company-identity";
 export function DemoSelector() {
   const [role, setRole] = useState("all"),
     [query, setQuery] = useState(""),
@@ -82,7 +83,7 @@ export function DemoSelector() {
         {filtered.map((a) => (
           <article className="demo-account" key={a.id}>
             <div>
-              <strong>{a.company}</strong>
+              <CompanyIdentity id={a.id} company={a.company} />
               <small>
                 {a.name} · {label(a.role)}
               </small>

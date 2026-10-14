@@ -6,6 +6,7 @@ import { Listing, Document, label } from "@/lib/types";
 import { PageIntro, Badge, ErrorBox, Loading, Empty } from "@/components/ui";
 import { ListingForm } from "@/components/listing-form";
 import { DocumentUpload } from "@/components/document-upload";
+import { CompanyIdentity } from "@/components/company-identity";
 export function OwnerAsset({ id }: { id: string }) {
   const { data, error, loading, reload } = useResource<{
     listing: Listing;
@@ -40,6 +41,7 @@ export function OwnerAsset({ id }: { id: string }) {
       >
         {l.commodity} · {l.location}, {l.country} · {l.transaction_type}
       </PageIntro>
+      <CompanyIdentity id={l.owner_id} />
       <ErrorBox message={actionError} />
       {l.review_notes && (
         <div className="notice">
@@ -100,12 +102,20 @@ export function OwnerAsset({ id }: { id: string }) {
               </div>
               <div className="actions">
                 {d.state === "ready" && (
-                  <a
-                    className="btn outline small"
-                    href={"/api/documents/" + d.id}
-                  >
-                    Download ↓
-                  </a>
+                  <>
+                    <Link
+                      className="btn outline small"
+                      href={"/dashboard/documents/" + d.id}
+                    >
+                      View ↗
+                    </Link>
+                    <a
+                      className="btn outline small"
+                      href={"/api/documents/" + d.id}
+                    >
+                      Download ↓
+                    </a>
+                  </>
                 )}
                 <button
                   className="btn danger small"

@@ -77,6 +77,8 @@ On the sign-in page, expand **Explore with a demo account**, filter by role or c
 
 The fictional baseline has **21 buyers, 41 sellers and all six roles**, for **67 accounts**, including a suspended owner and an unverified buyer. It includes 40 assets, 55 offers, 220 synthetic document records, 75 deal messages, 12 enquiries and review/audit history. Organization types cover sole proprietors, partnerships, cooperatives, private companies, regional groups and multinationals.
 
+Each demo organization has an original SVG logo with its own symbol, palette and monogram. Logos appear in account selection, participant records, the Exchange, asset lists and deal rooms. `npm run demo:logos` regenerates the committed assets. The demo seed updates only logo paths on existing profiles, preserving their roles, status and other visitor changes.
+
 Examples span draft evidence gaps, submission, requested corrections, approval, withdrawal, competing/pending/declined/withdrawn offers, accepted diligence, agreements, regulatory approvals, closing, completion and cancellation. Currency examples cover LSL, ZAR and USD, with full sales, partial stakes, joint ventures and offtake structures. Prices, mineral rights, organizations and files are fictional.
 
 Demo access uses a separate signed, HttpOnly, same-site session with a two-hour expiry. Every database query in that session runs in the `tafari_demo` schema using a transaction-local search path with no `public` fallback. Roles and grants are read from the demo database; no role value supplied by the browser grants access. Demo administrators can manage only that schema. Invalid/expired demo cookies fail closed. Successful real sign-in or registration clears the demo session.
@@ -96,6 +98,10 @@ Browser tests cover every role, mobile filtering, canary checks against real-sco
 ## Private files
 
 Allowed: PDF, JPEG, PNG, WEBP, DOCX, XLSX; 20 MB per file, up to 30 files per asset. Files are private. Authorized downloads use attachment disposition and `no-store`. Upload tokens are scoped to one new pathname, allowed type/size and a short expiry based on the storage service clock. Final metadata is checked before a document becomes ready.
+
+Ready files have **View** and **Download** actions on asset documents, deal rooms and the back-office library. `/dashboard/documents/:id` provides an in-app viewer: PDFs use locally hosted PDF.js with page/zoom/password controls and readable page text, photos display directly, Word files provide text content, and spreadsheets provide worksheet selection and paginated cell values. Download preserves the original file and formatting.
+
+Metadata, previews and downloads all enforce the same owner/staff/document-grant checks. File bytes are not passed to third-party viewing services. Office archives have decompression limits, XML entity declarations are rejected, and content is rendered as escaped text. Large content limits are displayed in the viewer. PDF.js worker, fonts and decoding assets are prepared from the pinned dependency by `prebuild`/`predev`, including remote builds.
 
 ## Production setup
 

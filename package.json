@@ -5,11 +5,14 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
+    "predev": "node lib/pdf-assets.mjs",
+    "prebuild": "node lib/pdf-assets.mjs",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed-demo": "tsx scripts/seed-demo.ts",
+    "demo:logos": "tsx scripts/generate-demo-logos.ts",
     "test": "playwright test"
   },
   "repository": {
@@ -28,8 +31,11 @@
     "@neondatabase/auth": "0.6.0-beta",
     "@neondatabase/serverless": "1.2.0",
     "@vercel/blob": "2.8.1",
+    "fast-xml-parser": "5.11.2",
+    "fflate": "0.8.3",
     "lucide-react": "1.55.0",
     "next": "16.4.0",
+    "pdfjs-dist": "6.4.299",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zod": "4.6.7"

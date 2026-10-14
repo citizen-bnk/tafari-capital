@@ -27,13 +27,14 @@ await sql.transaction([
   ...ddl.map((s) => sql.query(s)),
   sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS organization_type text NOT NULL DEFAULT ''`,
   sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS demo_verified boolean NOT NULL DEFAULT true`,
+  sql`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS logo_url text NOT NULL DEFAULT ''`,
 ]);
 const queries = [
   sql`SELECT set_config('search_path','tafari_demo,pg_catalog',true)`,
 ];
 for (const a of demoAccounts) {
   queries.push(
-    sql`INSERT INTO profiles(id,email,name,role,status,company,country,organization_type,demo_verified,created_at) VALUES (${a.id},${a.email},${a.name},${a.role},${a.status},${a.company},${a.country},${a.organizationType},${a.verified},now()-interval '90 days') ON CONFLICT DO NOTHING`,
+    sql`INSERT INTO profiles(id,email,name,role,status,company,country,organization_type,demo_verified,logo_url,created_at) VALUES (${a.id},${a.email},${a.name},${a.role},${a.status},${a.company},${a.country},${a.organizationType},${a.verified},${a.logo_url || ""},now()-interval '90 days') ON CONFLICT(id) DO UPDATE SET logo_url=excluded.logo_url`,
   );
 }
 const states = [

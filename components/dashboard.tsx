@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useResource } from "@/lib/client";
 import { User, Listing, Offer, price, date } from "@/lib/types";
+import { CompanyIdentity } from "@/components/company-identity";
 import {
   PageIntro,
   Badge,
@@ -32,6 +33,7 @@ export function Dashboard() {
       >
         Your assets, offers and conversations with the Tafari deal desk.
       </PageIntro>
+      <CompanyIdentity id={data.actor.id} company={data.actor.company} />
       {!data.actor.verified && (
         <div className="notice">
           Verify your email to list assets, submit offers and upload documents.{" "}
@@ -92,6 +94,7 @@ export function Dashboard() {
                 <tr key={l.id}>
                   <td>
                     <strong>{l.title}</strong>
+                    <CompanyIdentity id={l.owner_id} />
                     <small>
                       {l.commodity} · {l.country}
                     </small>
@@ -149,6 +152,7 @@ export function Dashboard() {
                 <tr key={o.id}>
                   <td>
                     <strong>{o.title}</strong>
+                    <CompanyIdentity id={o.buyer_id} />
                     <small>
                       {o.buyer_id === data.actor.id
                         ? "Your offer"

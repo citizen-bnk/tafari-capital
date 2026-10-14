@@ -17,6 +17,11 @@ import { randomUUID } from "node:crypto";
 import { demoSuperAdminId } from "@/lib/demo/accounts";
 import { sampleDocument } from "@/lib/demo/document";
 import { recordStatus } from "@/lib/navigation";
+import { readDemoSession } from "@/lib/demo/session";
+function publicListing(record: Record<string, unknown>, demo: boolean) {
+  const { owner_id, ...safe } = record;
+  return demo ? { ...safe, demo_owner_id: owner_id } : safe;
+}
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ path: string[] }> };
 export async function GET(request: Request, context: Context) {
@@ -24,12 +29,13 @@ export async function GET(request: Request, context: Context) {
     const { path } = await context.params;
     const sql = db();
     if (path[0] === "listings") {
+      const demo = !!(await readDemoSession());
       if (path[1]) {
         const id = uuid.parse(path[1]);
         const [listing] =
-          await sql`SELECT id,title,commodity,country,location,description,transaction_type,asking_price,currency,area_hectares,status,created_at FROM listings WHERE id=${id} AND status IN ('approved','under_offer','sold')`;
+          await sql`SELECT id,owner_id,title,commodity,country,location,description,transaction_type,asking_price,currency,area_hectares,status,created_at FROM listings WHERE id=${id} AND status IN ('approved','under_offer','sold')`;
         if (!listing) throw new HttpError(404, "Listing not found.");
-        return Response.json({ listing });
+        return Response.json({ listing: publicListing(listing, demo) });
       }
       const q = new URL(request.url).searchParams;
       const search = (q.get("q") || "").slice(0, 120),
@@ -41,10 +47,13 @@ export async function GET(request: Request, context: Context) {
             Math.min(Math.floor(Number(q.get("page") || 0)) || 0, 100000),
           ) * 30;
       const [listings, [count]] = await Promise.all([
-        sql`SELECT id,title,commodity,country,location,description,transaction_type,asking_price,currency,area_hectares,status,created_at FROM listings WHERE status IN ('approved','under_offer','sold') AND (${country}='' OR country=${country}) AND (${commodity}='' OR commodity=${commodity}) AND (${search}='' OR title ILIKE ${"%" + search + "%"} OR commodity ILIKE ${"%" + search + "%"}) ORDER BY created_at DESC LIMIT 30 OFFSET ${offset}`,
+        sql`SELECT id,owner_id,title,commodity,country,location,description,transaction_type,asking_price,currency,area_hectares,status,created_at FROM listings WHERE status IN ('approved','under_offer','sold') AND (${country}='' OR country=${country}) AND (${commodity}='' OR commodity=${commodity}) AND (${search}='' OR title ILIKE ${"%" + search + "%"} OR commodity ILIKE ${"%" + search + "%"}) ORDER BY created_at DESC LIMIT 30 OFFSET ${offset}`,
         sql`SELECT count(*) FROM listings WHERE status IN ('approved','under_offer','sold') AND (${country}='' OR country=${country}) AND (${commodity}='' OR commodity=${commodity}) AND (${search}='' OR title ILIKE ${"%" + search + "%"} OR commodity ILIKE ${"%" + search + "%"})`,
       ]);
-      return Response.json({ listings, total: Number(count.count) });
+      return Response.json({
+        listings: listings.map((l) => publicListing(l, demo)),
+        total: Number(count.count),
+      });
     }
     const a = await actor(false);
     if (path[0] === "dashboard") {

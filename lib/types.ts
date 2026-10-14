@@ -1,4 +1,5 @@
 export type Listing = {
+  demo_owner_id?: string;
   id: string;
   owner_id?: string;
   owner_name?: string;
@@ -44,6 +45,7 @@ export type Document = {
   created_at: string;
 };
 export type User = {
+  logo_url?: string;
   demo?: boolean;
   organization_type?: string;
   id: string;

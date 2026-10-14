@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { backOfficeHref, recordStatus, recordStatuses } from "@/lib/navigation";
+import { CompanyIdentity } from "@/components/company-identity";
 import {
   Users,
   FileCheck,
@@ -238,6 +239,7 @@ export function BackOffice() {
                       <header>
                         <div>
                           <h3>{l.title}</h3>
+                          <CompanyIdentity id={l.owner_id} />
                           <p className="muted">
                             {l.commodity} · {l.country} · {l.owner_name}
                           </p>
@@ -329,6 +331,7 @@ export function BackOffice() {
                         <tr key={o.id}>
                           <td>
                             <strong>{o.title}</strong>
+                            <CompanyIdentity id={o.buyer_id} />
                             <small>
                               {o.buyer_name}
                               <br />
@@ -376,6 +379,7 @@ export function BackOffice() {
                         <tr key={u.id}>
                           <td>
                             <strong>{u.name}</strong>
+                            <CompanyIdentity id={u.id} company={u.company} />
                             <small>
                               {u.email}
                               <br />
@@ -476,12 +480,20 @@ export function BackOffice() {
                       </div>
                       <div className="actions">
                         {d.state === "ready" && (
-                          <a
-                            className="btn outline small"
-                            href={"/api/documents/" + d.id}
-                          >
-                            Download ↓
-                          </a>
+                          <>
+                            <Link
+                              className="btn outline small"
+                              href={"/dashboard/documents/" + d.id}
+                            >
+                              View ↗
+                            </Link>
+                            <a
+                              className="btn outline small"
+                              href={"/api/documents/" + d.id}
+                            >
+                              Download ↓
+                            </a>
+                          </>
                         )}
                         <Link
                           className="btn outline small"
@@ -517,6 +529,10 @@ export function BackOffice() {
                       <header>
                         <div>
                           <h3>{q.name}</h3>
+                          <CompanyIdentity
+                            email={q.email}
+                            company={q.company}
+                          />
                           <p>
                             {q.company} ·{" "}
                             <a href={"mailto:" + q.email}>{q.email}</a>

@@ -8,3 +8,4 @@ playwright-report/
 *.tsbuildinfo
 .agents/
 skills-lock.json
+public/pdfjs/

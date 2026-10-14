@@ -3,6 +3,8 @@ import { config } from "dotenv";
 import { neon } from "@neondatabase/serverless";
 import { del } from "@vercel/blob";
 import { randomBytes } from "node:crypto";
+import { sampleDocument } from "../lib/demo/document";
+import { docxFixture, xlsxFixture, pngFixture } from "./file-fixtures";
 config({ path: ".env.local", quiet: true });
 const sql = neon(process.env.DATABASE_URL!);
 const run = Date.now(),
@@ -119,6 +121,7 @@ test("owner listing, private uploads, administrator review, buyer offer and mana
   browser,
   baseURL,
 }) => {
+  test.setTimeout(300000);
   const ownerContext = await browser.newContext({ baseURL }),
     buyerContext = await browser.newContext({ baseURL }),
     adminContext = await browser.newContext({ baseURL }),
@@ -149,7 +152,7 @@ test("owner listing, private uploads, administrator review, buyer offer and mana
     timeout: 15000,
   });
   const listingId = new URL(owner.url()).pathname.split("/").pop()!;
-  const pdf = Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF");
+  const pdf = sampleDocument("Cloud upload PDF fixture");
   for (const kind of ["title", "mandate"]) {
     await owner.getByLabel("Document category").selectOption(kind);
     await owner.getByLabel("Choose file").setInputFiles({
@@ -162,9 +165,72 @@ test("owner listing, private uploads, administrator review, buyer offer and mana
       owner.getByText(`test-${kind}.pdf`, { exact: true }),
     ).toBeVisible({ timeout: 25000 });
   }
+  for (const [name, mimeType, buffer] of [
+    ["test-photo.png", "image/png", pngFixture],
+    [
+      "test-brief.docx",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      docxFixture,
+    ],
+    [
+      "test-values.xlsx",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      xlsxFixture,
+    ],
+  ] as const) {
+    await owner.getByLabel("Document category").selectOption("technical");
+    await owner
+      .getByLabel("Choose file")
+      .setInputFiles({ name, mimeType, buffer });
+    await owner.getByRole("button", { name: "Upload document" }).click();
+    await expect(owner.getByText(name, { exact: true })).toBeVisible({
+      timeout: 25000,
+    });
+  }
   const docs =
     await sql`SELECT id,pathname FROM documents WHERE listing_id=${listingId} AND state='ready' ORDER BY created_at DESC`;
-  expect(docs.length).toBe(2);
+  expect(docs.length).toBe(5);
+  const owned = await (
+    await owner.request.get("/api/platform/asset/" + listingId)
+  ).json();
+  for (const [name, format] of [
+    ["test-title.pdf", "pdf"],
+    ["test-photo.png", "image"],
+    ["test-brief.docx", "word"],
+    ["test-values.xlsx", "sheet"],
+  ]) {
+    const document = owned.documents.find(
+      (d: { name: string }) => d.name === name,
+    );
+    await owner.goto("/dashboard/documents/" + document.id);
+    if (format === "pdf")
+      await expect(owner.locator("canvas[data-rendered=true]")).toBeVisible({
+        timeout: 20000,
+      });
+    if (format === "image")
+      await expect
+        .poll(() =>
+          owner
+            .locator(".image-viewer img")
+            .evaluate((img) => (img as HTMLImageElement).naturalWidth),
+        )
+        .toBeGreaterThan(0);
+    if (format === "word")
+      await expect(owner.locator(".word-preview")).toContainText(
+        "Private asset brief & terms",
+      );
+    if (format === "sheet") {
+      await expect(owner.locator(".sheet-preview")).toContainText(
+        "Asset value",
+      );
+      await owner.getByLabel("Worksheet", { exact: true }).selectOption("1");
+      await expect(owner.locator(".sheet-preview")).toContainText("Gold assay");
+    }
+    await expect(
+      owner.getByRole("link", { name: "Download original", exact: false }),
+    ).toBeVisible();
+  }
+  await owner.goto("/dashboard/listings/" + listingId);
   await owner.getByLabel("I am authorized").check();
   await owner.getByRole("button", { name: "Submit for review" }).click();
   await expect(owner.locator(".badge.submitted")).toBeVisible();
@@ -188,9 +254,7 @@ test("owner listing, private uploads, administrator review, buyer offer and mana
   await expect(
     admin.locator(".admin-sidebar").getByText("super admin", { exact: false }),
   ).toBeVisible();
-  await admin
-    .getByRole("link", { name: "Asset review", exact: true })
-    .click();
+  await admin.getByRole("link", { name: "Asset review", exact: true }).click();
   await admin
     .getByLabel("Review note")
     .fill("Test evidence checked and approved for this disposable test.");

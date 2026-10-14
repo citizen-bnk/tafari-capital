@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, FileText, MapPin, Pickaxe } from "lucide-react";
 import { Listing, price, label, date } from "@/lib/types";
+import { CompanyIdentity } from "@/components/company-identity";
 export function StatLink({
   count,
   title,
@@ -100,6 +101,7 @@ export function ListingCard({ listing: l }: { listing: Listing }) {
       <div className="asset-body">
         <p className="eyebrow">{l.transaction_type}</p>
         <h3>{l.title}</h3>
+        <CompanyIdentity id={l.demo_owner_id || l.owner_id} />
         <p className="muted location">
           <MapPin size={15} />
           {l.location}, {l.country}

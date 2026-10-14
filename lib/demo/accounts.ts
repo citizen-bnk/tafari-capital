@@ -17,6 +17,7 @@ export type DemoAccount = {
   status: string;
   verified: boolean;
   scenario: string;
+  logo_url?: string;
 };
 const types = [
   "Sole proprietor",
@@ -200,5 +201,5 @@ export const demoAccounts: DemoAccount[] = [
     verified: false,
     scenario: "Unverified buyer can view workspace but cannot submit an offer",
   },
-];
+].map((account) => ({ ...account, logo_url: `/demo-logos/${account.id}.svg` }));
 export const demoSuperAdminId = "demo-role-super_admin-5";

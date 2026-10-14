@@ -16,6 +16,7 @@ import { head, del } from "@vercel/blob";
 import { randomUUID } from "node:crypto";
 import { demoSuperAdminId } from "@/lib/demo/accounts";
 import { sampleDocument } from "@/lib/demo/document";
+import { recordStatus } from "@/lib/navigation";
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ path: string[] }> };
 export async function GET(request: Request, context: Context) {
@@ -53,7 +54,37 @@ export async function GET(request: Request, context: Context) {
         await sql`SELECT o.*,l.title,l.owner_id,p.name buyer_name FROM offers o JOIN listings l ON l.id=o.listing_id JOIN profiles p ON p.id=o.buyer_id WHERE o.buyer_id=${a.id} OR l.owner_id=${a.id} ORDER BY o.created_at DESC LIMIT 200`;
       const [profile] =
         await sql`SELECT company,phone,country FROM profiles WHERE id=${a.id}`;
-      return Response.json({ actor: { ...a, ...profile }, listings, offers });
+      const [stats] =
+        await sql`SELECT (SELECT count(*) FROM listings WHERE owner_id=${a.id}) listings,(SELECT count(*) FROM listings WHERE owner_id=${a.id} AND status='submitted') review,(SELECT count(*) FROM offers o JOIN listings l ON l.id=o.listing_id WHERE (o.buyer_id=${a.id} OR l.owner_id=${a.id}) AND o.status='pending') offers,(SELECT count(*) FROM offers o JOIN listings l ON l.id=o.listing_id WHERE (o.buyer_id=${a.id} OR l.owner_id=${a.id}) AND o.status='accepted') deals`;
+      return Response.json({
+        actor: { ...a, ...profile },
+        listings,
+        offers,
+        stats,
+      });
+    }
+    if (path[0] === "records") {
+      const view = z.enum(["listings", "offers"]).parse(path[1]);
+      const q = new URL(request.url).searchParams,
+        status = recordStatus(view, q.get("status")),
+        search = "%" + (q.get("q") || "").slice(0, 120) + "%",
+        offset =
+          Math.max(
+            0,
+            Math.min(Math.floor(Number(q.get("page"))) || 0, 100000),
+          ) * 30;
+      if (view === "listings") {
+        const [listings, [count]] = await Promise.all([
+          sql`SELECT * FROM listings WHERE owner_id=${a.id} AND (${status}='' OR status=${status}) AND title ILIKE ${search} ORDER BY created_at DESC LIMIT 30 OFFSET ${offset}`,
+          sql`SELECT count(*) FROM listings WHERE owner_id=${a.id} AND (${status}='' OR status=${status}) AND title ILIKE ${search}`,
+        ]);
+        return Response.json({ listings, total: Number(count.count) });
+      }
+      const [offers, [count]] = await Promise.all([
+        sql`SELECT o.*,l.title,l.owner_id,p.name buyer_name FROM offers o JOIN listings l ON l.id=o.listing_id JOIN profiles p ON p.id=o.buyer_id WHERE (o.buyer_id=${a.id} OR l.owner_id=${a.id}) AND (${status}='' OR o.status=${status}) AND l.title ILIKE ${search} ORDER BY o.created_at DESC LIMIT 30 OFFSET ${offset}`,
+        sql`SELECT count(*) FROM offers o JOIN listings l ON l.id=o.listing_id WHERE (o.buyer_id=${a.id} OR l.owner_id=${a.id}) AND (${status}='' OR o.status=${status}) AND l.title ILIKE ${search}`,
+      ]);
+      return Response.json({ offers, total: Number(count.count) });
     }
     if (path[0] === "asset") {
       const id = uuid.parse(path[1]);
@@ -83,6 +114,13 @@ export async function GET(request: Request, context: Context) {
         );
       admin(a);
       const q = new URL(request.url).searchParams,
+        tab = q.get("tab") || "overview",
+        status = recordStatus(tab, q.get("status")),
+        listingStatus = tab === "listings" ? status : "",
+        offerStatus = tab === "offers" ? status : "",
+        userStatus = tab === "users" ? status : "",
+        enquiryStatus = tab === "enquiries" ? status : "",
+        documentStatus = tab === "documents" ? status : "",
         search = "%" + (q.get("q") || "").slice(0, 120) + "%",
         offset =
           Math.max(
@@ -91,12 +129,12 @@ export async function GET(request: Request, context: Context) {
           ) * 50;
       const [listings, offers, users, enquiries, audits, documents] =
         await Promise.all([
-          sql`SELECT l.*,p.name owner_name,p.email owner_email FROM listings l JOIN profiles p ON p.id=l.owner_id WHERE l.title ILIKE ${search} OR p.email ILIKE ${search} ORDER BY l.created_at DESC LIMIT 50 OFFSET ${offset}`,
-          sql`SELECT o.*,l.title,l.owner_id,p.name buyer_name,p.email buyer_email FROM offers o JOIN listings l ON l.id=o.listing_id JOIN profiles p ON p.id=o.buyer_id WHERE l.title ILIKE ${search} OR p.email ILIKE ${search} ORDER BY o.created_at DESC LIMIT 50 OFFSET ${offset}`,
-          sql`SELECT * FROM profiles WHERE name ILIKE ${search} OR email ILIKE ${search} ORDER BY created_at DESC LIMIT 50 OFFSET ${offset}`,
-          sql`SELECT * FROM enquiries WHERE name ILIKE ${search} OR email ILIKE ${search} OR message ILIKE ${search} ORDER BY created_at DESC LIMIT 50 OFFSET ${offset}`,
+          sql`SELECT l.*,p.name owner_name,p.email owner_email FROM listings l JOIN profiles p ON p.id=l.owner_id WHERE (l.title ILIKE ${search} OR p.email ILIKE ${search}) AND (${listingStatus}='' OR l.status=${listingStatus}) ORDER BY l.created_at DESC LIMIT 50 OFFSET ${offset}`,
+          sql`SELECT o.*,l.title,l.owner_id,p.name buyer_name,p.email buyer_email FROM offers o JOIN listings l ON l.id=o.listing_id JOIN profiles p ON p.id=o.buyer_id WHERE (l.title ILIKE ${search} OR p.email ILIKE ${search}) AND (${offerStatus}='' OR o.status=${offerStatus}) ORDER BY o.created_at DESC LIMIT 50 OFFSET ${offset}`,
+          sql`SELECT * FROM profiles WHERE (name ILIKE ${search} OR email ILIKE ${search}) AND (${userStatus}='' OR status=${userStatus}) ORDER BY created_at DESC LIMIT 50 OFFSET ${offset}`,
+          sql`SELECT * FROM enquiries WHERE (name ILIKE ${search} OR email ILIKE ${search} OR message ILIKE ${search}) AND (${enquiryStatus}='' OR status=${enquiryStatus}) ORDER BY created_at DESC LIMIT 50 OFFSET ${offset}`,
           sql`SELECT a.*,p.name actor_name FROM audit_log a JOIN profiles p ON p.id=a.actor_id WHERE a.action ILIKE ${search} OR p.name ILIKE ${search} ORDER BY a.created_at DESC LIMIT 50 OFFSET ${offset}`,
-          sql`SELECT d.id,d.listing_id,d.owner_id,d.name,d.kind,d.size,d.state,d.created_at,l.title FROM documents d LEFT JOIN listings l ON l.id=d.listing_id WHERE d.state<>'deleted' AND (d.name ILIKE ${search} OR l.title ILIKE ${search}) ORDER BY d.created_at DESC LIMIT 50 OFFSET ${offset}`,
+          sql`SELECT d.id,d.listing_id,d.owner_id,d.name,d.kind,d.size,d.state,d.created_at,l.title FROM documents d LEFT JOIN listings l ON l.id=d.listing_id WHERE d.state<>'deleted' AND (d.name ILIKE ${search} OR l.title ILIKE ${search}) AND (${documentStatus}='' OR d.state=${documentStatus}) ORDER BY d.created_at DESC LIMIT 50 OFFSET ${offset}`,
         ]);
       const [stats] =
         await sql`SELECT (SELECT count(*) FROM listings WHERE status='submitted') review,(SELECT count(*) FROM offers WHERE status='accepted') deals,(SELECT count(*) FROM profiles) users,(SELECT count(*) FROM enquiries WHERE status='new') enquiries`;

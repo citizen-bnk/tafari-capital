@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { backOfficeHref, recordStatus, recordStatuses } from "@/lib/navigation";
 import {
   Users,
   FileCheck,
@@ -22,7 +24,14 @@ import {
   date,
   label,
 } from "@/lib/types";
-import { PageIntro, Badge, ErrorBox, Loading, Empty } from "@/components/ui";
+import {
+  PageIntro,
+  Badge,
+  ErrorBox,
+  Loading,
+  Empty,
+  StatLink,
+} from "@/components/ui";
 type Data = {
   actor: User;
   listings: Listing[];
@@ -43,11 +52,27 @@ const tabs = [
   ["audits", "Audit trail", History],
 ] as const;
 export function BackOffice() {
-  const [tab, setTab] = useState("overview"),
-    [query, setQuery] = useState(""),
-    [page, setPage] = useState(0);
+  const params = useSearchParams(),
+    router = useRouter();
+  const requestedTab = params.get("tab"),
+    tab = tabs.some(([value]) => value === requestedTab)
+      ? requestedTab!
+      : "overview",
+    query = (params.get("q") || "").slice(0, 120),
+    status = recordStatus(tab, params.get("status")),
+    page = Math.max(
+      0,
+      Math.min(Math.floor(Number(params.get("page"))) || 0, 100000),
+    );
   const { data, error, loading, reload } = useResource<Data>(
-    "admin?q=" + encodeURIComponent(query) + "&page=" + page,
+    "admin?tab=" +
+      tab +
+      "&status=" +
+      status +
+      "&q=" +
+      encodeURIComponent(query) +
+      "&page=" +
+      page,
   );
   const [saveError, setError] = useState(""),
     [notice, setNotice] = useState(""),
@@ -82,18 +107,15 @@ export function BackOffice() {
             {label(data.actor.role)}
           </p>
           {tabs.map(([value, text, Icon]) => (
-            <button
-              className={tab === value ? "active" : ""}
-              onClick={() => {
-                setTab(value);
-                setPage(0);
-                setQuery("");
-              }}
+            <Link
+              className={tab === value ? "sidebar-tab active" : "sidebar-tab"}
+              aria-current={tab === value ? "page" : undefined}
+              href={backOfficeHref(value)}
               key={value}
             >
               <Icon size={16} />
               {text}
-            </button>
+            </Link>
           ))}
           <Link className="text-link" href="/dashboard">
             My workspace →
@@ -111,36 +133,69 @@ export function BackOffice() {
               className="filter-bar"
               onSubmit={(e) => {
                 e.preventDefault();
-                setPage(0);
-                setQuery(String(new FormData(e.currentTarget).get("q") || ""));
+                const f = new FormData(e.currentTarget);
+                router.push(
+                  backOfficeHref(
+                    tab,
+                    String(f.get("status") || ""),
+                    String(f.get("q") || ""),
+                  ),
+                );
               }}
             >
               <label>
                 Search records
-                <input name="q" placeholder="Name, title, email or action" />
+                <input
+                  key={query}
+                  name="q"
+                  defaultValue={query}
+                  placeholder="Name, title, email or action"
+                />
               </label>
+              {recordStatuses[tab] && (
+                <label>
+                  Status filter
+                  <select
+                    key={status + tab}
+                    name="status"
+                    aria-label="Status filter"
+                    defaultValue={status}
+                  >
+                    <option value="">All statuses</option>
+                    {recordStatuses[tab].map((s) => (
+                      <option key={s} value={s}>
+                        {label(s)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <button className="btn dark">Search</button>
             </form>
           )}
           {tab === "overview" && (
             <>
               <div className="stats">
-                <div className="stat">
-                  <b>{data.stats.review}</b>
-                  <span>Awaiting review</span>
-                </div>
-                <div className="stat">
-                  <b>{data.stats.deals}</b>
-                  <span>Active deals</span>
-                </div>
-                <div className="stat">
-                  <b>{data.stats.users}</b>
-                  <span>Participants</span>
-                </div>
-                <div className="stat">
-                  <b>{data.stats.enquiries}</b>
-                  <span>New enquiries</span>
-                </div>
+                <StatLink
+                  count={data.stats.review}
+                  title="Awaiting review"
+                  href={backOfficeHref("listings", "submitted")}
+                />
+                <StatLink
+                  count={data.stats.deals}
+                  title="Active deals"
+                  href={backOfficeHref("offers", "accepted")}
+                />
+                <StatLink
+                  count={data.stats.users}
+                  title="Participants"
+                  href={backOfficeHref("users")}
+                />
+                <StatLink
+                  count={data.stats.enquiries}
+                  title="New enquiries"
+                  href={backOfficeHref("enquiries", "new")}
+                />
               </div>
               <div className="panel">
                 <p className="eyebrow">Your operating rhythm</p>
@@ -152,18 +207,15 @@ export function BackOffice() {
                   confidentiality, and record each closing stage.
                 </p>
                 <div className="actions" style={{ marginTop: 20 }}>
-                  <button
+                  <Link
                     className="btn dark"
-                    onClick={() => setTab("listings")}
+                    href={backOfficeHref("listings", "submitted")}
                   >
                     Review submissions →
-                  </button>
-                  <button
-                    className="btn outline"
-                    onClick={() => setTab("offers")}
-                  >
+                  </Link>
+                  <Link className="btn outline" href={backOfficeHref("offers")}>
                     Manage transactions →
-                  </button>
+                  </Link>
                 </div>
               </div>
               <div className="notice">
@@ -328,7 +380,13 @@ export function BackOffice() {
                               {u.email}
                               <br />
                               {u.company} {u.phone}
-                              {u.organization_type && <><br />{u.organization_type} · Fictional demo organization</>}
+                              {u.organization_type && (
+                                <>
+                                  <br />
+                                  {u.organization_type} · Fictional demo
+                                  organization
+                                </>
+                              )}
                             </small>
                           </td>
                           <td>
@@ -540,7 +598,9 @@ export function BackOffice() {
               <button
                 className="btn outline small"
                 disabled={page === 0 || loading}
-                onClick={() => setPage(page - 1)}
+                onClick={() =>
+                  router.push(backOfficeHref(tab, status, query, page - 1))
+                }
               >
                 ← Previous
               </button>
@@ -550,7 +610,9 @@ export function BackOffice() {
                 disabled={
                   loading || (data[tab as keyof Data] as unknown[]).length < 50
                 }
-                onClick={() => setPage(page + 1)}
+                onClick={() =>
+                  router.push(backOfficeHref(tab, status, query, page + 1))
+                }
               >
                 Next →
               </button>

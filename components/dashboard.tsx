@@ -2,12 +2,20 @@
 import Link from "next/link";
 import { useResource } from "@/lib/client";
 import { User, Listing, Offer, price, date } from "@/lib/types";
-import { PageIntro, Badge, Loading, ErrorBox, Empty } from "@/components/ui";
+import {
+  PageIntro,
+  Badge,
+  Loading,
+  ErrorBox,
+  Empty,
+  StatLink,
+} from "@/components/ui";
 export function Dashboard() {
   const { data, error, loading } = useResource<{
     actor: User;
     listings: Listing[];
     offers: Offer[];
+    stats: { listings: number; review: number; offers: number; deals: number };
   }>("dashboard");
   if (loading) return <Loading />;
   if (error || !data) return <ErrorBox message={error} />;
@@ -38,25 +46,32 @@ export function Dashboard() {
         </div>
       )}
       <div className="stats">
-        <div className="stat">
-          <b>{data.listings.length}</b>
-          <span>Your listings</span>
-        </div>
-        <div className="stat">
-          <b>{data.listings.filter((x) => x.status === "submitted").length}</b>
-          <span>Awaiting review</span>
-        </div>
-        <div className="stat">
-          <b>{data.offers.filter((x) => x.status === "pending").length}</b>
-          <span>Open offers</span>
-        </div>
-        <div className="stat">
-          <b>{data.offers.filter((x) => x.status === "accepted").length}</b>
-          <span>Active transactions</span>
-        </div>
+        <StatLink
+          count={data.stats.listings}
+          title="Your listings"
+          href="/dashboard/listings"
+        />
+        <StatLink
+          count={data.stats.review}
+          title="Awaiting review"
+          href="/dashboard/listings?status=submitted"
+        />
+        <StatLink
+          count={data.stats.offers}
+          title="Open offers"
+          href="/dashboard/offers?status=pending"
+        />
+        <StatLink
+          count={data.stats.deals}
+          title="Active transactions"
+          href="/dashboard/offers?status=accepted"
+        />
       </div>
       <div className="heading-row">
         <h2>Your assets</h2>
+        <Link className="text-link" href="/dashboard/listings">
+          View all your assets →
+        </Link>
         <Link className="text-link" href="/exchange">
           Browse the Exchange ↗
         </Link>
@@ -112,8 +127,11 @@ export function Dashboard() {
           </Link>
         </Empty>
       )}
-      <div className="compact-heading">
+      <div className="heading-row compact-heading">
         <h2>Offers & deal rooms</h2>
+        <Link className="text-link" href="/dashboard/offers">
+          View all offers & deals →
+        </Link>
       </div>
       {data.offers.length ? (
         <div className="table-wrap">

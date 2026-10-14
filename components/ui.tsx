@@ -1,6 +1,27 @@
 import Link from "next/link";
 import { ArrowUpRight, FileText, MapPin, Pickaxe } from "lucide-react";
 import { Listing, price, label, date } from "@/lib/types";
+export function StatLink({
+  count,
+  title,
+  href,
+}: {
+  count: number | string;
+  title: string;
+  href: string;
+}) {
+  return (
+    <Link
+      className="stat stat-link"
+      href={href}
+      aria-label={`View ${title.toLowerCase()}: ${count}`}
+    >
+      <ArrowUpRight size={17} aria-hidden="true" />
+      <b>{count}</b>
+      <span>{title}</span>
+    </Link>
+  );
+}
 export function Badge({ value }: { value: string }) {
   return <span className={"badge " + value}>{label(value)}</span>;
 }

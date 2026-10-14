@@ -7,6 +7,8 @@ export function WorkspaceNav() {
     <nav className="workspace-nav" aria-label="Workspace menu">
       {[
         ["/dashboard", "Overview"],
+        ["/dashboard/listings", "My assets"],
+        ["/dashboard/offers", "Offers & deals"],
         ["/dashboard/listings/new", "List an asset"],
         ["/dashboard/profile", "My profile"],
         ["/back-office", "Tafari back office"],

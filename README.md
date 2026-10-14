@@ -16,9 +16,11 @@ Public: `/`, `/services`, `/about`, `/how-it-works`, `/contact`, `/exchange`, `/
 
 Accounts: `/auth/sign-up`, `/auth/sign-in`, `/auth/verify-email`, `/auth/forgot-password`, `/auth/reset-password`.
 
-Workspace: `/dashboard`, `/dashboard/profile`, `/dashboard/listings/new`, `/dashboard/listings/:id`, `/dashboard/deals/:id`.
+Workspace: `/dashboard`, `/dashboard/profile`, `/dashboard/listings`, `/dashboard/offers`, `/dashboard/listings/new`, `/dashboard/listings/:id`, `/dashboard/deals/:id`.
 
-Administration: `/back-office` with asset review, transactions, users, documents, enquiries and audit history. Records support search and pagination.
+Administration: `/back-office` with asset review, transactions, users, documents, enquiries and audit history. Tabs, search, status filters and page numbers are encoded in the URL and survive reload and browser Back.
+
+Every counter card in the deal-desk and personal workspace is a keyboard-accessible link to its matching records. Submitted assets, accepted deals, pending offers and new enquiries open filtered views; participant and asset totals open all matching records. Workspace totals are calculated over all authorized records rather than the capped overview lists. Detail views support search, status filtering, pagination and links to individual assets/deal rooms. New dashboard metrics should use the shared `StatLink` component.
 
 ## Owner-to-sale workflow
 

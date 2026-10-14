@@ -189,7 +189,7 @@ test("owner listing, private uploads, administrator review, buyer offer and mana
     admin.locator(".admin-sidebar").getByText("super admin", { exact: false }),
   ).toBeVisible();
   await admin
-    .getByRole("button", { name: "Asset review", exact: true })
+    .getByRole("link", { name: "Asset review", exact: true })
     .click();
   await admin
     .getByLabel("Review note")

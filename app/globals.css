@@ -964,6 +964,12 @@ select:focus {
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
+.stat-link { position: relative; color: inherit; text-decoration: none; transition: border-color 150ms, box-shadow 150ms; }
+.stat-link > svg { position: absolute; right: 14px; top: 14px; color: var(--muted); }
+.stat-link:hover { border-color: var(--gold); box-shadow: 0 3px 12px #14203312; }
+.stat-link:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.admin-sidebar .sidebar-tab { display: flex; align-items: center; gap: 10px; color: #c1cbd8; padding: 12px; margin-bottom: 5px; border-radius: 5px; font-size: 12px; text-decoration: none; }
+.admin-sidebar .sidebar-tab.active, .admin-sidebar .sidebar-tab:hover { background: #2d3b53; color: var(--gold); }
 .tabs {
   display: flex;
   gap: 8px;
@@ -1423,7 +1429,7 @@ td small {
     width: 100%;
     margin: 0 0 10px;
   }
-  .admin-sidebar button {
+  .admin-sidebar button, .admin-sidebar .sidebar-tab {
     width: auto;
     padding: 9px;
   }

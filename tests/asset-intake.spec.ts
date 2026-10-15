@@ -7,6 +7,7 @@ import {
   parseAnswer,
   questions,
   rewindAnswers,
+  retainActiveAnswers,
   validateContact,
   type Answers,
   type AssetApplication,
@@ -58,7 +59,7 @@ test("standalone visual funnel has no website navigation and keeps the current q
 }) => {
   await page.goto("/submit-asset?utm_source=marketing");
   await expect(
-    page.getByRole("textbox", { name: "What is your full name?" }),
+    page.getByRole("button", { name: "Yes, please contact me", exact: true }),
   ).toBeVisible();
   await expect(
     page.locator(".site-header, footer, .nav, .demo-banner"),
@@ -89,6 +90,22 @@ test("standalone visual funnel has no website navigation and keeps the current q
 });
 test("question engine handles contact consent, branching, optional answers and safe edits", () => {
   expect(validateContact(contact).contact_phone).toBe("+26658000099");
+  expect(
+    retainActiveAnswers({
+      ...contact,
+      company: "Retained company",
+      country: "Lesotho",
+      other_country: "Botswana",
+      commodity: "Other",
+      other_commodity: "Copper",
+    }),
+  ).toEqual({
+    ...contact,
+    company: "Retained company",
+    country: "Lesotho",
+    commodity: "Other",
+    other_commodity: "Copper",
+  });
   expect(() =>
     validateContact({ ...contact, contact_consent: "Not now" }),
   ).toThrow();
@@ -132,7 +149,7 @@ test("question engine handles contact consent, branching, optional answers and s
       { ...contact, company: "Test", relationship: "I own the asset" },
       "company",
     ),
-  ).toEqual(contact);
+  ).toEqual({ ...contact, company: "Test", relationship: "I own the asset" });
 });
 test("unverified applicants can start privately but cannot claim or create a listing", async ({
   page,
@@ -196,6 +213,20 @@ test("guest contact-first chat saves, resumes and supports private staff follow-
   browser,
 }) => {
   await page.goto("/submit-asset");
+  expect(
+    (await (await page.request.get("/api/intake")).json()).application,
+  ).toBeNull();
+  await page
+    .getByRole("button", { name: "Yes, please contact me", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "What is your full name?" }),
+  ).toBeVisible();
+  let app = (await (await page.request.get("/api/intake")).json())
+    .application as AssetApplication;
+  created.push({ id: app.id, demo: false });
+  expect(app.answers).toEqual({ contact_consent: "Yes, please contact me" });
+
   await page
     .getByRole("textbox", { name: "What is your full name?" })
     .fill(contact.contact_name);
@@ -216,18 +247,10 @@ test("guest contact-first chat saves, resumes and supports private staff follow-
     })
     .fill(contact.contact_phone);
   await page.getByRole("button", { name: "Continue →", exact: true }).click();
-  expect(
-    (await (await page.request.get("/api/intake")).json()).application,
-  ).toBeNull();
-  await page
-    .getByRole("button", { name: "Yes, please contact me", exact: true })
-    .click();
   await expect(
     page.getByRole("heading", { name: "What is your company name?" }),
   ).toBeVisible();
-  let app = (await (await page.request.get("/api/intake")).json())
-    .application as AssetApplication;
-  created.push({ id: app.id, demo: false });
+  app = (await (await page.request.get("/api/intake")).json()).application;
   expect(app.contact_phone).toBe("+26658000099");
   expect(app).not.toHaveProperty("resume_hash");
   expect(app).not.toHaveProperty("staff_notes");
@@ -486,4 +509,310 @@ test("demo owner completes questionnaire, prepares one private draft and staff r
     data: { id: app.id, revision: ownerView.revision, action: "resume" },
   });
   expect(resume.status()).toBe(200);
+});
+
+test("Back preserves later answers, autosaves unfinished text and exposes a private administrator timeline", async ({
+  page,
+  browser,
+}) => {
+  await page.request.post("/api/demo", {
+    headers: { origin: base },
+    data: { id: "demo-owner-03" },
+  });
+  await page.goto("/submit-asset");
+  await page
+    .getByRole("button", { name: "Yes, please contact me", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "What is your full name?" }),
+  ).toBeVisible();
+  let app = (await (await page.request.get("/api/intake")).json())
+    .application as AssetApplication;
+  created.push({ id: app.id, demo: true });
+  const read = async () =>
+    (await (await page.request.get("/api/intake")).json())
+      .application as AssetApplication;
+  await page
+    .getByRole("textbox", { name: "What is your full name?" })
+    .fill("Original owner");
+  await expect
+    .poll(async () => (await read()).draft_answers.contact_name)
+    .toBe("Original owner");
+  await page.getByRole("button", { name: "Continue →", exact: true }).click();
+  await page.getByRole("button", { name: "Email", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Which email address should we use?" })
+    .fill("trace@example.org");
+  await page.getByRole("button", { name: "Continue →", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "What is your company name?" })
+    .fill("Original company");
+  await page.getByRole("button", { name: "Continue →", exact: true }).click();
+  await page.getByRole("button", { name: "← Back", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", { name: "What is your company name?" }),
+  ).toHaveValue("Original company");
+  await page
+    .getByRole("textbox", { name: "What is your company name?" })
+    .fill("Changed company");
+  await page.getByRole("button", { name: "← Back", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", { name: "Which email address should we use?" }),
+  ).toHaveValue("trace@example.org");
+  app = await read();
+  expect(app.answers.company).toBe("Original company");
+  expect(app.draft_answers.company).toBe("Changed company");
+  await page.reload();
+  await expect(
+    page.getByRole("textbox", { name: "Which email address should we use?" }),
+  ).toHaveValue("trace@example.org");
+  await page.getByRole("button", { name: "Continue →", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", { name: "What is your company name?" }),
+  ).toHaveValue("Changed company");
+  await page.getByRole("button", { name: "Continue →", exact: true }).click();
+  await page
+    .getByRole("button", { name: "I own the asset", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Mining asset", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "What is the asset or project called?" })
+    .fill("Unfinished prospect");
+  await expect
+    .poll(async () => (await read()).draft_answers.asset_name)
+    .toBe("Unfinished prospect");
+  await page.getByRole("button", { name: "← Back", exact: true }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "What kind of opportunity do you have?",
+    }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Mining asset", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", { name: "What is the asset or project called?" }),
+  ).toHaveValue("Unfinished prospect");
+  await page
+    .getByRole("textbox", { name: "What is the asset or project called?" })
+    .fill("");
+  await expect
+    .poll(async () => (await read()).draft_answers.asset_name)
+    .toBe("");
+  await page
+    .getByRole("textbox", { name: "What is the asset or project called?" })
+    .fill("Unfinished prospect");
+  await expect
+    .poll(async () => (await read()).draft_answers.asset_name)
+    .toBe("Unfinished prospect");
+  app = await read();
+  expect(app.answers.company).toBe("Changed company");
+  expect(app.answers.contact_email).toBe("trace@example.org");
+  await page.goto("/");
+  await expect
+    .poll(async () => {
+      const rows =
+        await sql`SELECT action FROM tafari_demo.asset_application_events WHERE application_id=${app.id} AND action='paused'`;
+      return rows.length;
+    })
+    .toBeGreaterThan(0);
+  const owner = await (
+    await page.request.get("/api/applications?id=" + app.id)
+  ).json();
+  expect(owner).not.toHaveProperty("events");
+  expect(owner).not.toHaveProperty("eventsTotal");
+  const staff = await browser.newContext();
+  try {
+    await staff.request.post(base + "/api/demo", {
+      headers: { origin: base },
+      data: { id: "demo-role-super_admin-5" },
+    });
+    const detail = await (
+      await staff.request.get(base + "/api/applications?id=" + app.id)
+    ).json();
+    expect(detail.application.current_question).toBe("asset_name");
+    expect(detail.application.draft_answers.asset_name).toBe(
+      "Unfinished prospect",
+    );
+    expect(detail.eventsTotal).toBeGreaterThan(10);
+    const events =
+      await sql`SELECT * FROM tafari_demo.asset_application_events WHERE application_id=${app.id} ORDER BY id`;
+    expect(
+      events.some(
+        (e) =>
+          e.action === "answer_changed" &&
+          e.question === "company" &&
+          e.before_value === "Original company" &&
+          e.after_value === "Changed company",
+      ),
+    ).toBe(true);
+    expect(
+      events.some(
+        (e) => e.action === "went_back" && e.current_question === "company",
+      ),
+    ).toBe(true);
+    expect(
+      events.some(
+        (e) =>
+          e.action === "draft_saved" &&
+          e.question === "asset_name" &&
+          e.after_value === "Unfinished prospect",
+      ),
+    ).toBe(true);
+    expect(events.some((e) => e.snapshot.company === "Original company")).toBe(
+      true,
+    );
+    const desk = await staff.newPage();
+    await desk.goto(base + "/dashboard/applications/" + app.id);
+    await expect(desk.locator(".application-progress")).toContainText(
+      "What is the asset or project called?",
+    );
+    await expect(desk.locator(".application-timeline")).toContainText(
+      "Answer changed",
+    );
+    await desk.screenshot({
+      path: "../../outputs/tafari-application-history.png",
+      fullPage: false,
+    });
+  } finally {
+    await staff.close();
+  }
+  expect(
+    (await sql`SELECT id FROM public.asset_applications WHERE id=${app.id}`)
+      .length,
+  ).toBe(0);
+  // Return after the pause, finish, and ensure an unfinished edit cannot be silently submitted.
+  app = await read();
+  let response = await patch(page.request, app, {
+    action: "answer",
+    question: "asset_name",
+    value: "Unfinished prospect",
+  });
+  expect(response.status()).toBe(200);
+  app = (await response.json()).application;
+  for (let q = nextQuestion(app.answers); q; q = nextQuestion(app.answers)) {
+    const value = q.optional
+      ? ""
+      : q.options?.[0] ||
+        (q.id === "description"
+          ? "A fictional opportunity used to test saved progress, review and submission."
+          : "Test district");
+    response = await patch(page.request, app, {
+      action: "answer",
+      question: q.id,
+      value,
+    });
+    expect(response.status(), q.id).toBe(200);
+    app = (await response.json()).application;
+  }
+  response = await patch(page.request, app, {
+    action: "navigate",
+    question: "company",
+  });
+  expect(response.status()).toBe(200);
+  app = (await response.json()).application;
+  expect(
+    (
+      await page.request.post("/api/intake/activity", {
+        headers: { origin: base },
+        data: {
+          action: "draft_saved",
+          question: "company",
+          value: "Final company",
+        },
+      })
+    ).status(),
+  ).toBe(200);
+  response = await patch(page.request, app, {
+    action: "navigate",
+    question: "documents_ready",
+  });
+  expect(response.status()).toBe(200);
+  app = (await response.json()).application;
+  response = await patch(page.request, app, {
+    action: "answer",
+    question: "documents_ready",
+    value: app.answers.documents_ready,
+  });
+  expect(response.status()).toBe(200);
+  app = (await response.json()).application;
+  expect((await patch(page.request, app, { action: "submit" })).status()).toBe(
+    400,
+  );
+  response = await patch(page.request, app, {
+    action: "navigate",
+    question: "company",
+  });
+  expect(response.status()).toBe(200);
+  app = (await response.json()).application;
+  response = await patch(page.request, app, {
+    action: "answer",
+    question: "company",
+    value: "Final company",
+  });
+  expect(response.status()).toBe(200);
+  app = (await response.json()).application;
+  response = await patch(page.request, app, { action: "submit" });
+  expect(response.status()).toBe(200);
+  expect((await response.json()).application.answers.company).toBe(
+    "Final company",
+  );
+  expect(
+    (
+      await page.request.post("/api/intake/activity", {
+        headers: { origin: "https://unrelated.example" },
+        data: { action: "paused", question: "asset_name" },
+      })
+    ).status(),
+  ).toBe(403);
+});
+
+test("going back to Not now pauses permission until the applicant agrees again", async ({
+  page,
+}) => {
+  await page.request.post("/api/demo", {
+    headers: { origin: base },
+    data: { id: "demo-owner-03" },
+  });
+  const start = await page.request.post("/api/intake", {
+    headers: { origin: base },
+    data: { answers: contact },
+  });
+  expect(start.status()).toBe(201);
+  let app = (await start.json()).application as AssetApplication;
+  created.push({ id: app.id, demo: true });
+  const back = await patch(page.request, app, {
+    action: "navigate",
+    question: "contact_consent",
+  });
+  expect(back.status()).toBe(200);
+  await page.goto("/submit-asset");
+  await page.getByRole("button", { name: "Not now", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "That’s okay." }),
+  ).toBeVisible();
+  app = (await (await page.request.get("/api/intake")).json()).application;
+  expect(app.answers.contact_consent).toBe("Not now");
+  expect(
+    (
+      await patch(page.request, app, {
+        action: "navigate",
+        question: "company",
+      })
+    ).status(),
+  ).toBe(403);
+  const [event] =
+    await sql`SELECT * FROM tafari_demo.asset_application_events WHERE application_id=${app.id} AND action='stopped' ORDER BY id DESC LIMIT 1`;
+  expect(event.before_value).toBe("Yes, please contact me");
+  expect(event.after_value).toBe("Not now");
+  await page
+    .getByRole("button", { name: "Return to the conversation", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Yes, please contact me", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "What is your full name?" }),
+  ).toHaveValue(contact.contact_name);
+  app = (await (await page.request.get("/api/intake")).json()).application;
+  expect(app.answers.contact_consent).toBe("Yes, please contact me");
+  expect(app.contact_phone).toBe("+26658000099");
 });

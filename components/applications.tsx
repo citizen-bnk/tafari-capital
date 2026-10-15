@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   answeredQuestions,
+  activeQuestions,
+  currentQuestion,
+  questionLabel,
+  type ApplicationEvent,
   type AssetApplication,
 } from "@/lib/intake/questions";
 export function Applications({ id }: { id?: string }) {
@@ -40,11 +44,19 @@ export function Applications({ id }: { id?: string }) {
   const [reviewStatus, setReviewStatus] = useState("new"),
     [notes, setNotes] = useState("");
   const [canResume, setCanResume] = useState(false);
+  const [events, setEvents] = useState<ApplicationEvent[]>([]),
+    [eventsTotal, setEventsTotal] = useState(0);
+  const eventPage = Math.max(
+    0,
+    Math.min(100000, Math.floor(Number(params.get("event_page"))) || 0),
+  );
   useEffect(() => {
     let active = true;
     setLoading(true);
     const params = new URLSearchParams(
-      id ? { id } : { status, q: query, page: String(page), scope },
+      id
+        ? { id, event_page: String(eventPage) }
+        : { status, q: query, page: String(page), scope },
     );
     fetch("/api/applications?" + params, { cache: "no-store" })
       .then(async (r) => {
@@ -56,6 +68,8 @@ export function Applications({ id }: { id?: string }) {
           setRows(items);
           setStaff(data.staff);
           setCanResume(!!data.canResume);
+          setEvents(data.events || []);
+          setEventsTotal(data.eventsTotal || 0);
           setTotal(data.total || 0);
           setError("");
           if (id) {
@@ -73,7 +87,7 @@ export function Applications({ id }: { id?: string }) {
     return () => {
       active = false;
     };
-  }, [id, status, query, page, scope, refresh]);
+  }, [id, status, query, page, scope, refresh, eventPage]);
   async function action(row: AssetApplication, action: string) {
     setBusy(true);
     setError("");
@@ -188,8 +202,15 @@ export function Applications({ id }: { id?: string }) {
           </p>
           <div className="notice">
             <h2>Contact details</h2>
+            {row.answers.contact_consent !== "Yes, please contact me" && (
+              <p className="notice error">
+                Contact permission paused: the applicant selected Not now. Wait
+                for renewed permission before contacting them.
+              </p>
+            )}
             <p>
-              {row.contact_name} · Preferred: {row.contact_preference}
+              {row.contact_name || "Contact details pending"} · Preferred:{" "}
+              {row.contact_preference || "Not chosen yet"}
             </p>
             {row.contact_email && (
               <p>
@@ -206,6 +227,152 @@ export function Applications({ id }: { id?: string }) {
               {row.source}
             </p>
           </div>
+          <section className="application-progress">
+            <h2>Application progress</h2>
+            <dl>
+              <div>
+                <dt>Last recorded step</dt>
+                <dd>
+                  {row.state === "submitted"
+                    ? "Application sent"
+                    : questionLabel(currentQuestion(row)?.id || null)}
+                </dd>
+              </div>
+              <div>
+                <dt>Last activity</dt>
+                <dd>
+                  {new Date(
+                    row.last_seen_at || row.updated_at,
+                  ).toLocaleString()}
+                </dd>
+              </div>
+              <div>
+                <dt>Last action</dt>
+                <dd>{eventLabel(row.last_event)}</dd>
+              </div>
+              <div>
+                <dt>Saved answers</dt>
+                <dd>
+                  {answeredQuestions(row.answers).length} of{" "}
+                  {activeQuestions(row.answers).length}
+                </dd>
+              </div>
+            </dl>
+            {row.state === "draft" &&
+              Date.now() -
+                new Date(row.last_seen_at || row.updated_at).getTime() >
+                30 * 60000 && (
+                <p>
+                  No recent activity (30+ minutes). The step above is the last
+                  recorded stopping point.
+                </p>
+              )}
+            {Object.keys(row.draft_answers || {}).length > 0 && (
+              <details>
+                <summary>Unfinished answers</summary>
+                <dl>
+                  {Object.entries(row.draft_answers)
+                    .filter(([key]) =>
+                      activeQuestions(row.answers).some((q) => q.id === key),
+                    )
+                    .map(([key, value]) => (
+                      <div key={key}>
+                        <dt>{questionLabel(key)}</dt>
+                        <dd>{value || "Cleared — not confirmed"}</dd>
+                      </div>
+                    ))}
+                </dl>
+              </details>
+            )}
+          </section>
+          {staff && (
+            <section className="application-timeline">
+              <h2>Application history</h2>
+              <p>{eventsTotal} recorded events · newest first</p>
+              {!events.length && <p>No history has been recorded yet.</p>}
+              <ol>
+                {events.map((event) => (
+                  <li key={event.id}>
+                    <div className="timeline-heading">
+                      <strong>{eventLabel(event.action)}</strong>
+                      <time dateTime={event.occurred_at}>
+                        {new Date(event.occurred_at).toLocaleString()}
+                      </time>
+                    </div>
+                    <p>
+                      {questionLabel(event.question || event.current_question)}
+                    </p>
+                    {event.action === "went_back" && (
+                      <p>
+                        From: {questionLabel(event.previous_question)}
+                        <br />
+                        To: {questionLabel(event.current_question)}
+                      </p>
+                    )}
+                    {event.before_value !== null && (
+                      <p>
+                        <b>Before:</b>{" "}
+                        {event.before_value || "Skipped / cleared"}
+                      </p>
+                    )}
+                    {event.after_value !== null && (
+                      <p>
+                        <b>
+                          {event.action === "draft_saved" ||
+                          event.action === "paused"
+                            ? "Unfinished:"
+                            : "Saved:"}
+                        </b>{" "}
+                        {event.after_value || "Skipped / cleared"}
+                      </p>
+                    )}
+                    <details>
+                      <summary>Answers at this point</summary>
+                      <dl>
+                        {answeredQuestions(event.snapshot).map((q) => (
+                          <div key={q.id}>
+                            <dt>{q.prompt}</dt>
+                            <dd>{event.snapshot[q.id] || "Skipped"}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </details>
+                  </li>
+                ))}
+              </ol>
+              <div className="actions">
+                <button
+                  className="btn light"
+                  disabled={!eventPage}
+                  onClick={() =>
+                    router.push(
+                      "/dashboard/applications/" +
+                        id +
+                        "?event_page=" +
+                        (eventPage - 1),
+                    )
+                  }
+                >
+                  Newer events
+                </button>
+                <span>History page {eventPage + 1}</span>
+                <button
+                  className="btn light"
+                  disabled={(eventPage + 1) * 40 >= eventsTotal}
+                  onClick={() =>
+                    router.push(
+                      "/dashboard/applications/" +
+                        id +
+                        "?event_page=" +
+                        (eventPage + 1),
+                    )
+                  }
+                >
+                  Older events
+                </button>
+              </div>
+            </section>
+          )}
           <dl className="application-answers">
             {answeredQuestions(row.answers)
               .filter((q) => q.section === "asset")
@@ -290,6 +457,8 @@ export function Applications({ id }: { id?: string }) {
                   <th>Contact</th>
                   <th>Progress</th>
                   <th>Status</th>
+                  <th>Last recorded step</th>
+                  <th>Last activity</th>
                   <th>Received</th>
                 </tr>
               </thead>
@@ -307,7 +476,7 @@ export function Applications({ id }: { id?: string }) {
                       </Link>
                     </td>
                     <td>
-                      {a.contact_name}
+                      {a.contact_name || "Contact details pending"}
                       <br />
                       {a.contact_email || a.contact_phone}
                     </td>
@@ -315,6 +484,16 @@ export function Applications({ id }: { id?: string }) {
                       {a.state === "draft" ? "In progress" : "Sent to Tafari"}
                     </td>
                     <td>{a.status}</td>
+                    <td>
+                      {a.state === "submitted"
+                        ? "Sent"
+                        : questionLabel(currentQuestion(a)?.id || null)}
+                    </td>
+                    <td>
+                      {new Date(
+                        a.last_seen_at || a.updated_at,
+                      ).toLocaleString()}
+                    </td>
                     <td>{new Date(a.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
@@ -342,5 +521,32 @@ export function Applications({ id }: { id?: string }) {
         </>
       ) : null}
     </>
+  );
+}
+
+function eventLabel(action: string) {
+  return (
+    (
+      {
+        started: "Started with consent",
+        resumed: "Conversation resumed",
+        answer_saved: "Answer saved",
+        answer_confirmed: "Answer confirmed",
+        answer_changed: "Answer changed",
+        answer_skipped: "Question skipped",
+        went_back: "Went back to a question",
+        draft_saved: "Unfinished answer saved",
+        viewed: "Question viewed / reopened",
+        paused: "Page hidden or left",
+        stopped: "Applicant chose to stop",
+        submitted: "Application sent",
+        account_linked: "Account linked",
+        contact_updated: "Contact details updated",
+        tracking_enabled: "History enabled — earlier changes unavailable",
+        legacy: "Previously saved application",
+        staff_reviewed: "Tafari review updated",
+        draft_created: "Private asset draft created",
+      } as Record<string, string>
+    )[action] || action
   );
 }

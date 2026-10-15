@@ -15,6 +15,14 @@ export type Question = {
 };
 export const questions: Question[] = [
   {
+    id: "contact_consent",
+    section: "contact",
+    prompt: "May we save your progress and contact you about your asset?",
+    hint: "Your details and asset information stay private to you and the Tafari team. Nothing is published by this conversation.",
+    type: "choice",
+    options: ["Yes, please contact me", "Not now"],
+  },
+  {
     id: "contact_name",
     section: "contact",
     prompt: "What is your full name?",
@@ -48,14 +56,6 @@ export const questions: Question[] = [
     type: "email",
     placeholder: "you@company.com",
     when: (a) => a.contact_preference === "Email",
-  },
-  {
-    id: "contact_consent",
-    section: "contact",
-    prompt: "May Tafari save these details and contact you about your asset?",
-    hint: "Your details and asset information stay private to you and the Tafari team. Nothing is published by this conversation.",
-    type: "choice",
-    options: ["Yes, please contact me", "Not now"],
   },
   {
     id: "company",
@@ -323,11 +323,7 @@ export function rewindAnswers(a: Answers, id: string): Answers {
     index = active.findIndex((q) => q.id === id);
   if (index < 0 || !Object.hasOwn(a, id))
     throw new Error("This answer cannot be edited.");
-  if (active[index].section === "contact")
-    throw new Error(
-      "Contact details are already saved. Ask Tafari to update them or start a new application.",
-    );
-  return Object.fromEntries(active.slice(0, index).map((q) => [q.id, a[q.id]]));
+  return retainActiveAnswers(a);
 }
 export type AssetApplication = {
   id: string;
@@ -348,4 +344,41 @@ export type AssetApplication = {
   submitted_at?: string | null;
   staff_notes?: string;
   source: string;
+  current_question: string | null;
+  draft_answers: Answers;
+  last_seen_at: string;
+  last_event: string;
 };
+
+export function currentQuestion(
+  a: Pick<AssetApplication, "answers" | "current_question" | "state">,
+) {
+  if (a.state === "submitted") return null;
+  return (
+    activeQuestions(a.answers).find((q) => q.id === a.current_question) ||
+    nextQuestion(a.answers)
+  );
+}
+export function retainActiveAnswers(a: Answers): Answers {
+  return Object.fromEntries(
+    activeQuestions(a)
+      .filter((q) => Object.hasOwn(a, q.id))
+      .map((q) => [q.id, a[q.id]]),
+  );
+}
+export type ApplicationEvent = {
+  id: string;
+  action: string;
+  question: string | null;
+  previous_question: string | null;
+  current_question: string | null;
+  before_value: string | null;
+  after_value: string | null;
+  snapshot: Answers;
+  occurred_at: string;
+};
+export function questionLabel(id: string | null) {
+  return id
+    ? questions.find((q) => q.id === id)?.prompt || id
+    : "Review and send";
+}

@@ -41,8 +41,10 @@ test.afterAll(async () => {
 async function register(page: Page, email: string, name: string) {
   await page.goto("/auth/sign-up");
   await page.getByLabel("Full name").fill(name);
-  await page.getByLabel("Email address").fill(email);
-  await page.getByLabel(/^Password/).fill(password);
+  await page
+    .getByRole("textbox", { name: "Email address", exact: true })
+    .fill(email);
+  await page.locator('input[name="password"]:visible').fill(password);
   await page.locator("input[type=checkbox]").check();
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/verify-email/, { timeout: 20000 });
@@ -51,8 +53,10 @@ async function verifiedLogin(page: Page, email: string) {
   // Only disposable fixtures are verified here; real users must verify through email.
   await sql`UPDATE neon_auth."user" SET "emailVerified"=true WHERE email=${email}`;
   await page.goto("/auth/sign-in");
-  await page.getByLabel("Email address").fill(email);
-  await page.getByLabel(/^Password/).fill(password);
+  await page
+    .getByRole("textbox", { name: "Email address", exact: true })
+    .fill(email);
+  await page.locator('input[name="password"]:visible').fill(password);
   await page.getByRole("button", { name: "Sign in", exact: false }).click();
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 20000 });
 }

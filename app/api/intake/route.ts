@@ -135,6 +135,15 @@ export async function PATCH(request: Request) {
     const row = await intakeApplication(),
       sql = db();
     await rateLimit("intake-edit:" + row.id, 90);
+    if (
+      row.answers.contact_consent !== "Yes, please contact me" &&
+      !(
+        data.action === "answer" &&
+        data.question === "contact_consent" &&
+        data.value === "Yes, please contact me"
+      )
+    )
+      throw new HttpError(403, "Agree to save progress before continuing.");
     if (data.action === "draft")
       return Response.json(
         await prepareApplicationDraft(row.id, data.transaction_type),

@@ -126,6 +126,7 @@ export function AssetIntake() {
       throw new Error(
         "Progress changed in another tab. Reload before continuing.",
       );
+    return result;
   }
   useEffect(() => {
     setValue(
@@ -218,7 +219,10 @@ export function AssetIntake() {
         throw e;
       }
       if (question.id === "contact_consent" && parsed === "Not now") {
-        if (application) await activity("stopped");
+        if (application) {
+          const result = await activity("stopped");
+          if (result?.application) setApplication(result.application);
+        }
         setStopped(true);
         return;
       }

@@ -764,3 +764,55 @@ test("Back preserves later answers, autosaves unfinished text and exposes a priv
     ).status(),
   ).toBe(403);
 });
+
+test("going back to Not now pauses permission until the applicant agrees again", async ({
+  page,
+}) => {
+  await page.request.post("/api/demo", {
+    headers: { origin: base },
+    data: { id: "demo-owner-03" },
+  });
+  const start = await page.request.post("/api/intake", {
+    headers: { origin: base },
+    data: { answers: contact },
+  });
+  expect(start.status()).toBe(201);
+  let app = (await start.json()).application as AssetApplication;
+  created.push({ id: app.id, demo: true });
+  const back = await patch(page.request, app, {
+    action: "navigate",
+    question: "contact_consent",
+  });
+  expect(back.status()).toBe(200);
+  await page.goto("/submit-asset");
+  await page.getByRole("button", { name: "Not now", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "That’s okay." }),
+  ).toBeVisible();
+  app = (await (await page.request.get("/api/intake")).json()).application;
+  expect(app.answers.contact_consent).toBe("Not now");
+  expect(
+    (
+      await patch(page.request, app, {
+        action: "navigate",
+        question: "company",
+      })
+    ).status(),
+  ).toBe(403);
+  const [event] =
+    await sql`SELECT * FROM tafari_demo.asset_application_events WHERE application_id=${app.id} AND action='stopped' ORDER BY id DESC LIMIT 1`;
+  expect(event.before_value).toBe("Yes, please contact me");
+  expect(event.after_value).toBe("Not now");
+  await page
+    .getByRole("button", { name: "Return to the conversation", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Yes, please contact me", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "What is your full name?" }),
+  ).toHaveValue(contact.contact_name);
+  app = (await (await page.request.get("/api/intake")).json()).application;
+  expect(app.answers.contact_consent).toBe("Yes, please contact me");
+  expect(app.contact_phone).toBe("+26658000099");
+});

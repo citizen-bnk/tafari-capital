@@ -202,6 +202,12 @@ export function Applications({ id }: { id?: string }) {
           </p>
           <div className="notice">
             <h2>Contact details</h2>
+            {row.answers.contact_consent !== "Yes, please contact me" && (
+              <p className="notice error">
+                Contact permission paused: the applicant selected Not now. Wait
+                for renewed permission before contacting them.
+              </p>
+            )}
             <p>
               {row.contact_name || "Contact details pending"} · Preferred:{" "}
               {row.contact_preference || "Not chosen yet"}

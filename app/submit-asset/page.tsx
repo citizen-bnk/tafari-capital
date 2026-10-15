@@ -1,13 +1,13 @@
 import { AssetIntake } from "@/components/asset-intake";
 export const metadata = {
-  title: "Submit your asset",
+  title: { absolute: "Submit your mining asset" },
   description:
-    "Tell Tafari about your mine or asset through a simple, private, guided conversation.",
+    "A simple, private way to submit your mine or asset for a managed sale or partnership.",
 };
 export default function SubmitAssetPage() {
   return (
-    <div className="wrap section">
+    <main id="main" className="asset-funnel">
       <AssetIntake />
-    </div>
+    </main>
   );
 }

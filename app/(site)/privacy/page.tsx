@@ -43,8 +43,10 @@ export default function Privacy() {
       <h2>Your choices and retention</h2>
       <p>
         In the guided asset conversation, contact information is saved after you
-        agree to be contacted. Each later answer is saved so Tafari can follow
-        up even if you do not finish. A secure browser cookie lets you resume
+        agree to be contacted. Later answers, unfinished text, answer changes
+        and navigation steps are saved in an application history so Tafari can
+        follow up even if you do not finish. We record the last question reached
+        and activity time. A secure browser cookie lets you resume
         for 30 days; expiry of that cookie does not delete the application. You
         can update contact details in the conversation or ask Tafari to remove
         your application. Starting another asset keeps your earlier application

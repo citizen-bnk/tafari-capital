@@ -23,6 +23,7 @@ import {
   activeQuestions,
   answeredQuestions,
   nextQuestion,
+  currentQuestion,
   parseAnswer,
   type Answers,
   type AssetApplication,
@@ -50,14 +51,23 @@ export function AssetIntake() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [value, setValue] = useState(""),
-    [stopped, setStopped] = useState(false),
-    [editingContact, setEditingContact] = useState(false);
+    [stopped, setStopped] = useState(false);
   const [transaction, setTransaction] = useState("Full sale");
   const { data: session } = useAppSession();
   const currentRef = useRef<HTMLDivElement>(null);
-  const answers = editingContact ? local : application?.answers || local;
-  const question = nextQuestion(answers);
-  const complete = application?.state === "submitted" && !editingContact;
+  const answers = application?.answers || local;
+  const question = application
+    ? currentQuestion(application)
+    : nextQuestion(answers);
+  const complete = application?.state === "submitted";
+  const active = activeQuestions(answers);
+  const index = question
+    ? active.findIndex((q) => q.id === question.id)
+    : active.length;
+  const previous = index > 0 ? active[index - 1] : null;
+  const [saveNotice, setSaveNotice] = useState("");
+  const latest = useRef({ application, question, value });
+  latest.current = { application, question, value };
   const stage =
     complete || !question ? 2 : question.section === "contact" ? 0 : 1;
   useEffect(() => {
@@ -95,46 +105,146 @@ export function AssetIntake() {
       setBusy(false);
     }
   }
+  async function activity(action: string, withValue = false) {
+    const state = latest.current;
+    if (!state.application || state.application.state !== "draft") return;
+    const response = await fetch("/api/intake/activity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        question: state.question?.id || null,
+        ...(withValue && state.question?.type !== "choice"
+          ? { value: state.value }
+          : {}),
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok)
+      throw new Error(result.error || "Could not save. Please try again.");
+    if (result.saved === false && action === "draft_saved")
+      throw new Error(
+        "Progress changed in another tab. Reload before continuing.",
+      );
+  }
+  useEffect(() => {
+    setValue(
+      question
+        ? (application?.draft_answers?.[question.id] ??
+            answers[question.id] ??
+            "")
+        : "",
+    );
+    setSaveNotice("");
+  }, [question?.id, application?.revision]);
+  useEffect(() => {
+    if (application?.state === "draft" && !stopped)
+      void activity("viewed").catch(() => {});
+  }, [application?.id, question?.id, stopped]);
+  useEffect(() => {
+    if (
+      !application ||
+      busy ||
+      stopped ||
+      !question ||
+      question.type === "choice"
+    )
+      return;
+    setSaveNotice("Saving…");
+    let alive = true;
+    const timer = setTimeout(() => {
+      void activity("draft_saved", true)
+        .then(() => {
+          if (alive) setSaveNotice("Draft saved");
+        })
+        .catch((e) => {
+          if (!alive) return;
+          setSaveNotice("Not saved yet");
+          setError(e.message);
+        });
+    }, 1200);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [value, question?.id, application?.id, busy, stopped]);
+  useEffect(() => {
+    if (!application?.id) return;
+    let paused = false;
+    function pause() {
+      const state = latest.current;
+      if (paused || !state.application || state.application.state !== "draft")
+        return;
+      paused = true;
+      const payload = JSON.stringify({
+        action: "paused",
+        question: state.question?.id || null,
+        ...(state.question && state.question.type !== "choice"
+          ? { value: state.value }
+          : {}),
+      });
+      const blob = new Blob([payload], { type: "application/json" });
+      if (!navigator.sendBeacon?.("/api/intake/activity", blob))
+        void fetch("/api/intake/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+          keepalive: true,
+        }).catch(() => {});
+    }
+    function visibility() {
+      if (document.visibilityState === "hidden") pause();
+      else {
+        paused = false;
+        void activity("viewed").catch(() => {});
+      }
+    }
+    window.addEventListener("pagehide", pause);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      window.removeEventListener("pagehide", pause);
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, [application?.id]);
   async function answer(raw: string) {
     if (!question || busy) return;
     await perform(async () => {
-      const parsed = parseAnswer(question, raw);
+      let parsed: string;
+      try {
+        parsed = parseAnswer(question, raw);
+      } catch (e) {
+        if (application && question.type !== "choice")
+          await activity("draft_saved", true);
+        throw e;
+      }
       if (question.id === "contact_consent" && parsed === "Not now") {
+        if (application) await activity("stopped");
         setStopped(true);
         return;
       }
-      if (!application || editingContact) {
-        const updated = { ...answers, [question.id]: parsed };
-        if (question.id === "contact_consent") {
-          const result = await intake(
-            editingContact ? "PATCH" : "POST",
-            editingContact
-              ? {
-                  action: "contact",
-                  answers: updated,
-                  revision: application!.revision,
-                }
-              : { answers: updated },
-          );
-          setApplication(result.application);
-          setEditingContact(false);
-          setLocal({});
-        } else setLocal(updated);
-      } else {
-        const result = await intake("PATCH", {
-          action: "answer",
-          revision: application.revision,
-          question: question.id,
-          value: parsed,
-        });
-        setApplication(result.application);
-      }
+      const result = !application
+        ? await intake("POST", { answers: { contact_consent: parsed } })
+        : await intake("PATCH", {
+            action: "answer",
+            revision: application.revision,
+            question: question.id,
+            value: parsed,
+          });
+      setApplication(result.application);
+      setLocal({});
       setValue("");
+      setSaveNotice("");
     });
   }
   async function change(action: string, extra: Record<string, unknown> = {}) {
     if (!application) return;
     await perform(async () => {
+      if (
+        (action === "navigate" || action === "rewind") &&
+        question &&
+        question.type !== "choice"
+      )
+        await activity("draft_saved", true);
       const result = await intake("PATCH", {
         action,
         revision: application.revision,
@@ -144,6 +254,7 @@ export function AssetIntake() {
         window.location.assign("/dashboard/listings/" + result.id);
       else setApplication(result.application);
       setValue("");
+      setSaveNotice("");
     });
   }
   if (loading) return <p role="status">Looking for your saved progress…</p>;
@@ -225,11 +336,23 @@ export function AssetIntake() {
                 <div key={q.id} className="intake-exchange">
                   <p className="intake-bubble">{q.prompt}</p>
                   <div className="intake-reply">
-                    <span>{answers[q.id] || "Skipped for now"}</span>
+                    <span>
+                      {answers[q.id] || "Skipped for now"}
+                      {application &&
+                        Object.hasOwn(application.draft_answers, q.id) &&
+                        application.draft_answers[q.id] !==
+                          (answers[q.id] || "") && (
+                          <small className="funnel-unfinished">
+                            Unfinished change:{" "}
+                            {application.draft_answers[q.id] || "Cleared"} —
+                            choose Edit to confirm.
+                          </small>
+                        )}
+                    </span>
                     {!complete && q.section === "asset" && (
                       <button
                         disabled={busy}
-                        onClick={() => change("rewind", { question: q.id })}
+                        onClick={() => change("navigate", { question: q.id })}
                         aria-label={"Edit answer: " + q.prompt}
                       >
                         Edit
@@ -253,15 +376,15 @@ export function AssetIntake() {
               <div className="intake-bubble">
                 <h2>That’s okay.</h2>
                 <p>
-                  Your new contact answers have not been saved. You can come
-                  back whenever you are ready.
+                  {application
+                    ? "Your saved progress is kept. Come back whenever you are ready."
+                    : "Nothing has been saved. Come back whenever you are ready."}
                 </p>
                 <button
                   className="btn dark"
                   onClick={() => {
                     setStopped(false);
                     setLocal({});
-                    setEditingContact(false);
                   }}
                 >
                   Return to the conversation
@@ -341,9 +464,8 @@ export function AssetIntake() {
               <div className="intake-bubble">
                 <h2>Ready to send?</h2>
                 <p>
-                  Review your answers above. Editing an answer will ask you the
-                  following questions again so your information stays
-                  consistent.
+                  Check your answers. Use Back or Edit to make changes; other
+                  answers stay saved.
                 </p>
                 <button
                   disabled={busy}
@@ -358,7 +480,7 @@ export function AssetIntake() {
                 <p className="eyebrow">
                   {question.section === "contact"
                     ? "First, let’s get in touch"
-                    : `Asset details · ${answeredQuestions(answers).filter((q) => q.section === "asset").length + 1} of ${activeQuestions(answers).filter((q) => q.section === "asset").length}`}
+                    : `Asset details · ${active.filter((q) => q.section === "asset").findIndex((q) => q.id === question.id) + 1} of ${activeQuestions(answers).filter((q) => q.section === "asset").length}`}
                 </p>
                 <h2 id="intake-question" aria-live="polite">
                   {question.prompt}
@@ -447,26 +569,30 @@ export function AssetIntake() {
                 )}
               </div>
             )}
+            {!complete && !stopped && previous && (
+              <button
+                className="funnel-back"
+                disabled={busy}
+                onClick={() => change("navigate", { question: previous.id })}
+              >
+                ← Back
+              </button>
+            )}
             <p className="intake-save" role="status">
               {busy
                 ? "Saving your answer…"
                 : application
-                  ? "Saved. You can finish later."
+                  ? saveNotice || "Saved. You can finish later."
                   : "No account needed. Contact details save after your consent."}
             </p>
           </div>
         </div>
         {(application || error) && (
           <div className="intake-tools">
-            {application && (
+            {application && !complete && (
               <button
                 disabled={busy}
-                onClick={() => {
-                  setLocal({});
-                  setEditingContact(true);
-                  setStopped(false);
-                  setValue("");
-                }}
+                onClick={() => change("navigate", { question: "contact_name" })}
               >
                 Update contact details
               </button>
@@ -475,12 +601,12 @@ export function AssetIntake() {
               disabled={busy}
               onClick={() =>
                 perform(async () => {
+                  await activity("paused", true);
                   await intake("DELETE");
                   setApplication(null);
                   setLocal({});
                   setValue("");
                   setStopped(false);
-                  setEditingContact(false);
                 })
               }
             >

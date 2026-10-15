@@ -1,0 +1,13 @@
+BEGIN;
+ALTER TABLE asset_applications DROP CONSTRAINT IF EXISTS asset_applications_contact_preference_check;
+ALTER TABLE asset_applications ADD CONSTRAINT asset_applications_contact_preference_check CHECK(contact_preference IN ('','Phone call','Email'));
+ALTER TABLE asset_applications ADD COLUMN IF NOT EXISTS current_question text;
+ALTER TABLE asset_applications ADD COLUMN IF NOT EXISTS draft_answers jsonb NOT NULL DEFAULT '{}';
+ALTER TABLE asset_applications ADD COLUMN IF NOT EXISTS last_seen_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE asset_applications ADD COLUMN IF NOT EXISTS last_event text NOT NULL DEFAULT 'legacy';
+CREATE TABLE IF NOT EXISTS asset_application_events(id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,application_id uuid NOT NULL REFERENCES asset_applications(id) ON DELETE CASCADE,action text NOT NULL,question text,previous_question text,current_question text,before_value text,after_value text,snapshot jsonb NOT NULL DEFAULT '{}',occurred_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS application_event_history ON asset_application_events(application_id,id DESC);
+UPDATE asset_applications SET last_seen_at=updated_at WHERE last_event='legacy';
+INSERT INTO asset_application_events(application_id,action,current_question,snapshot) SELECT a.id,'tracking_enabled',a.current_question,a.answers FROM asset_applications a WHERE NOT EXISTS(SELECT 1 FROM asset_application_events e WHERE e.application_id=a.id);
+INSERT INTO schema_migrations(version) VALUES ('003_application_progress') ON CONFLICT DO NOTHING;
+COMMIT;

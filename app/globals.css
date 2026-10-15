@@ -1698,3 +1698,45 @@ td small {
 .stats { grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); }
 @media (max-width: 850px) { .intake-layout { grid-template-columns: 1fr; gap: 25px; } .intake-guide { position: static; } .intake-guide ol { display: none; } .intake-history { padding: 18px; } .intake-bubble { margin-right: 12px; } .intake-reply { margin-left: 25px; } }
 @media (max-width: 480px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.asset-funnel { min-height: 100svh; background: #f6f7f2; padding: 34px 28px 20px; color: #19392f; }
+.asset-funnel .intake-layout { max-width: 1120px; margin: auto; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 36px 70px; }
+.asset-funnel .intake-guide { top: 30px; }
+.funnel-service { display: flex; gap: 10px; align-items: center; font: 700 12px/1.4 Arial, sans-serif; letter-spacing: .13em; margin: 0 0 24px; }
+.funnel-illustration { width: 100%; height: auto; display: block; border-radius: 24px; }
+.asset-funnel h1, .asset-funnel h2 { font-family: Arial, sans-serif; text-transform: none; letter-spacing: -.035em; }
+.asset-funnel .intake-guide h1 { font-size: clamp(29px, 3.4vw, 44px); margin: 24px 0 12px; max-width: 430px; }
+.asset-funnel .intake-guide > p:not(.funnel-service):not(.funnel-reference) { font-size: 16px; margin: 0; }
+.funnel-steps { display: flex; gap: 20px; margin: 26px 0; font-size: 12px; color: #53634f; }
+.funnel-steps span { display: flex; gap: 7px; align-items: center; }
+.funnel-steps b { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid #bdcbb8; border-radius: 50%; }
+.funnel-steps .active { font-weight: 700; color: #19392f; }
+.funnel-steps .active b { background: #19392f; color: white; }
+.funnel-reference { font-size: 12px; line-height: 1.6; }
+.funnel-reference > svg { vertical-align: middle; }
+.funnel-reference small { display: block; color: #667565; font-size: 11px; }
+.asset-funnel .intake-chat { background: white; align-self: start; margin-top: 4px; border-radius: 22px; box-shadow: 0 12px 55px #19392f08; }
+.asset-funnel .intake-chat-heading { background: white; color: #19392f; border-bottom: 1px solid #e9ece5; padding: 22px 28px; font-size: 13px; }
+.asset-funnel .intake-chat-heading span { display: flex; align-items: center; gap: 5px; color: #677a6b; font-size: 11px; }
+.asset-funnel .intake-history { padding: 28px; }
+.funnel-answers { margin-bottom: 16px; border-bottom: 1px solid #e3e8df; padding-bottom: 14px; font-size: 12px; }
+.funnel-answers summary { cursor: pointer; font-weight: 700; padding: 5px 0; }
+.funnel-answers .intake-exchange { margin-top: 15px; }
+.funnel-answers .intake-bubble { margin: 0; padding: 0; background: transparent; border: 0; font-size: 12px; }
+.funnel-answers .intake-reply { margin: 7px 0 15px; padding: 10px 12px; font-size: 13px; }
+.asset-funnel .intake-current { padding: 8px 0; scroll-margin-top: 25px; }
+.asset-funnel .intake-current h2 { font-size: 28px; margin: 12px 0; }
+.asset-funnel #intake-hint { color: #667565; font-size: 13px; line-height: 1.6; margin-bottom: 22px; }
+.asset-funnel .intake-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.asset-funnel .intake-options button { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: center; padding: 16px 12px; min-height: 88px; font-size: 13px; line-height: 1.45; border-color: #d6dfd0; }
+.asset-funnel .intake-options button > svg { display: none; }
+.funnel-choice-icon { display: grid; place-items: center; width: 36px; height: 40px; border-radius: 10px; background: #eff4eb; color: #355a44; }
+.asset-funnel .intake-current input, .asset-funnel .intake-current textarea { background: #fafbf8; border-radius: 10px; font-size: 17px; padding: 16px; min-height: 54px; }
+.asset-funnel .btn.dark { background: #193f33; border-color: #193f33; border-radius: 9px; }
+.asset-funnel .intake-save { font-size: 11px; margin-top: 22px; }
+.asset-funnel .intake-tools { background: #fafbf8; padding: 16px 28px; gap: 18px; }
+.funnel-legal { grid-column: 1 / -1; text-align: center; color: #596850; font-size: 10px; margin: 0; }
+.funnel-legal a { color: inherit; text-decoration: underline; }
+@media (max-width: 850px) { .asset-funnel { padding: 22px 18px; } .asset-funnel .intake-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; max-width: 560px; } .funnel-service { margin-bottom: 15px; } .funnel-illustration { height: 155px; object-fit: contain; background: #eaf2e9; } .asset-funnel .intake-guide h1 { font-size: 28px; margin-top: 16px; } .asset-funnel .intake-guide > p:not(.funnel-service):not(.funnel-reference) { font-size: 13px; } .funnel-steps { margin: 17px 0 0; } .funnel-reference { margin-bottom: 0; } .asset-funnel .intake-chat { margin: 0; } .asset-funnel .intake-history { padding: 22px; } .asset-funnel .intake-chat-heading { padding: 18px 22px; } .asset-funnel .intake-current h2 { font-size: 25px; } }
+@media (prefers-reduced-motion: reduce) { .asset-funnel * { scroll-behavior: auto; } }
+
+.asset-funnel .intake-current form .actions { margin-top: 18px; }

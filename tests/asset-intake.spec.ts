@@ -53,6 +53,40 @@ test.afterAll(async () => {
     ]);
   }
 });
+test("standalone visual funnel has no website navigation and keeps the current question focused", async ({
+  page,
+}) => {
+  await page.goto("/submit-asset?utm_source=marketing");
+  await expect(
+    page.getByRole("textbox", { name: "What is your full name?" }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".site-header, footer, .nav, .demo-banner"),
+  ).toHaveCount(0);
+  await expect(page.locator(".funnel-illustration")).toBeVisible();
+  await expect(page.locator(".intake-chat h2")).toHaveCount(1);
+  await expect(page).toHaveTitle("Submit your mining asset");
+  await page.screenshot({
+    path: "../../outputs/tafari-asset-funnel-desktop.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: "../../outputs/tafari-asset-funnel-mobile.png",
+    fullPage: true,
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Toggle menu" }).click();
+  await expect(
+    page.getByRole("navigation", { name: "Main menu" }),
+  ).toBeVisible();
+  await expect(page.locator("footer")).toBeVisible();
+});
 test("question engine handles contact consent, branching, optional answers and safe edits", () => {
   expect(validateContact(contact).contact_phone).toBe("+26658000099");
   expect(() =>
@@ -100,23 +134,62 @@ test("question engine handles contact consent, branching, optional answers and s
     ),
   ).toEqual(contact);
 });
-test("unverified applicants can start privately but cannot claim or create a listing", async ({ page, browser }) => {
-  await page.request.post("/api/demo", { headers: { origin: base }, data: { id: "demo-unverified-buyer" } });
-  const declined = await page.request.post("/api/intake", { headers: { origin: base }, data: { answers: { ...contact, contact_consent: "Not now" } } });
+test("unverified applicants can start privately but cannot claim or create a listing", async ({
+  page,
+  browser,
+}) => {
+  await page.request.post("/api/demo", {
+    headers: { origin: base },
+    data: { id: "demo-unverified-buyer" },
+  });
+  const declined = await page.request.post("/api/intake", {
+    headers: { origin: base },
+    data: { answers: { ...contact, contact_consent: "Not now" } },
+  });
   expect(declined.status()).toBe(400);
-  expect((await (await page.request.get("/api/intake")).json()).application).toBeNull();
-  const start = await page.request.post("/api/intake", { headers: { origin: base }, data: { answers: contact } });
+  expect(
+    (await (await page.request.get("/api/intake")).json()).application,
+  ).toBeNull();
+  const start = await page.request.post("/api/intake", {
+    headers: { origin: base },
+    data: { answers: contact },
+  });
   expect(start.status()).toBe(201);
   const app = (await start.json()).application as AssetApplication;
   created.push({ id: app.id, demo: true });
-  expect((await patch(page.request, app, { action: "claim" })).status()).toBe(403);
-  expect((await patch(page.request, app, { action: "draft", transaction_type: "Full sale" })).status()).toBe(403);
+  expect((await patch(page.request, app, { action: "claim" })).status()).toBe(
+    403,
+  );
+  expect(
+    (
+      await patch(page.request, app, {
+        action: "draft",
+        transaction_type: "Full sale",
+      })
+    ).status(),
+  ).toBe(403);
   const other = await browser.newContext();
   try {
-    await other.request.post(base + "/api/demo", { headers: { origin: base }, data: { id: "demo-owner-04" } });
-    expect((await other.request.get(base + "/api/applications?id=" + app.id)).status()).toBe(404);
-    expect((await other.request.post(base + "/api/applications", { headers: { origin: base }, data: { id: app.id, revision: app.revision, action: "resume" } })).status()).toBe(404);
-  } finally { await other.close(); }
+    await other.request.post(base + "/api/demo", {
+      headers: { origin: base },
+      data: { id: "demo-owner-04" },
+    });
+    expect(
+      (
+        await other.request.get(base + "/api/applications?id=" + app.id)
+      ).status(),
+    ).toBe(404);
+    expect(
+      (
+        await other.request.post(base + "/api/applications", {
+          headers: { origin: base },
+          data: { id: app.id, revision: app.revision, action: "resume" },
+        })
+      ).status(),
+    ).toBe(404);
+  } finally {
+    await other.close();
+  }
 });
 test("guest contact-first chat saves, resumes and supports private staff follow-up", async ({
   page,
@@ -163,7 +236,11 @@ test("guest contact-first chat saves, resumes and supports private staff follow-
       ?.httpOnly,
   ).toBe(true);
   await page.getByRole("button", { name: "Skip for now", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "What is your connection to the asset?" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "What is your connection to the asset?",
+    }),
+  ).toBeVisible();
   await page.reload();
   await expect(
     page.getByRole("heading", {

@@ -1,7 +1,8 @@
 import { config } from "dotenv";
 import { neon } from "@neondatabase/serverless";
-import { readFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
+import { readFile, readdir } from "node:fs/promises";
+import { createHash, randomBytes } from "node:crypto";
+import { questions, type Answers } from "../lib/intake/questions";
 import { demoAccounts } from "../lib/demo/accounts";
 import { sampleDocument } from "../lib/demo/document";
 config({ path: ".env.local", quiet: true });
@@ -14,7 +15,15 @@ function id(key: string) {
     .digest("hex");
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
-const ddl = (await readFile("migrations/001_platform.sql", "utf8"))
+const migrationFiles = (await readdir("migrations"))
+  .filter((f) => /^\d+_.+\.sql$/.test(f))
+  .sort();
+const ddl = (
+  await Promise.all(
+    migrationFiles.map((f) => readFile("migrations/" + f, "utf8")),
+  )
+)
+  .join("\n")
   .split(";")
   .map((s) => s.trim())
   .filter((s) => s && s !== "BEGIN" && s !== "COMMIT");
@@ -174,6 +183,45 @@ for (let i = 0; i < 12; i++) {
     status = ["new", "in_progress", "resolved"][i % 3];
   queries.push(
     sql`INSERT INTO enquiries(id,name,email,company,message,status,created_at) VALUES (${enquiryId},${a.name},${a.email},${a.company},${["DEMO enquiry: how do I list an asset as a sole proprietor?", "DEMO enquiry: we need a joint venture introduction and mandate review.", "DEMO enquiry: our multinational team needs guidance on regulatory closing.", "DEMO enquiry: how do I request private documents and confirm confidentiality?"][i % 4]},${status},now()-(${i} * interval '1 day')) ON CONFLICT DO NOTHING`,
+  );
+}
+for (let i = 0; i < 12; i++) {
+  const owner = demoAccounts.filter(
+    (a) => a.role === "owner" && a.verified && a.status === "active",
+  )[i];
+  const answers: Answers = {
+    contact_name: owner.name,
+    contact_preference: "Email",
+    contact_email: owner.email,
+    contact_consent: "Yes, please contact me",
+  };
+  const full = i % 3 !== 0;
+  if (full)
+    for (const q of questions.filter((q) => q.section === "asset")) {
+      if (q.when && !q.when(answers)) continue;
+      answers[q.id] =
+        (
+          {
+            company: owner.company,
+            relationship: "I own the asset",
+            asset_type: "Mining asset",
+            asset_name: "DEMO guided application " + (i + 1),
+            country: owner.country,
+            location: "Maseru district",
+            commodity: "Gold",
+            development_stage: "Exploration",
+            transaction_goal: "Joint venture",
+            description:
+              "Fictional demonstration opportunity for a guided asset application and Tafari follow-up. No actual asset is offered.",
+            right_status: "Application in progress",
+            documents_ready: "Not yet",
+          } as Answers
+        )[q.id] ?? (q.optional ? "" : q.options?.[0] || "Not yet known");
+    }
+  const applicationId = id("guided-application-" + i);
+  const hash = createHash("sha256").update(randomBytes(32)).digest("hex");
+  queries.push(
+    sql`INSERT INTO asset_applications(id,reference,resume_hash,owner_id,contact_name,contact_email,contact_preference,answers,state,status,staff_notes,submitted_at) VALUES (${applicationId},${"TAF-DEMO-" + String(i + 1).padStart(2, "0")},${hash},${i === 0 ? null : owner.id},${owner.name},${owner.email},'Email',${JSON.stringify(answers)}::jsonb,${full ? "submitted" : "draft"},${["new", "contacted", "qualified", "closed"][i % 4]},'Fictional example for Tafari application review.',${full ? new Date().toISOString() : null}) ON CONFLICT DO NOTHING`,
   );
 }
 queries.push(

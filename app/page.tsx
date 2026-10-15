@@ -30,7 +30,7 @@ export default function Home() {
               </Link>
               <Link
                 className="btn outline-light"
-                href="/dashboard/listings/new"
+                href="/submit-asset"
               >
                 List your asset
               </Link>

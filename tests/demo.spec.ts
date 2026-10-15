@@ -84,11 +84,11 @@ test("demo selector offers every role on desktop and mobile with one-click login
       .getByRole("region", { name: "Demo accounts" })
       .or(page.locator(".demo-accounts")),
   ).toBeVisible();
-  await expect(page.locator(".demo-account")).toHaveCount(67);
+  await expect(page.locator(".demo-selector:visible .demo-account")).toHaveCount(67);
   for (const role of demoRoles) {
     await page.goto("/auth/sign-in");
-    await page.locator(".demo-selector summary").click();
-    await page.getByLabel("Demo role", { exact: true }).selectOption(role);
+    await page.locator(".demo-selector:visible summary").click();
+    await page.getByRole("combobox", { name: "Demo role", exact: true }).selectOption(role);
     const a = demoAccounts.find(
       (a) => a.role === role && a.status === "active" && a.verified,
     )!;
@@ -110,11 +110,11 @@ test("demo selector offers every role on desktop and mobile with one-click login
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/auth/sign-in");
-  await page.locator(".demo-selector summary").click();
-  await page.getByLabel("Demo role", { exact: true }).selectOption("owner");
-  await expect(page.locator(".demo-account")).toHaveCount(41);
-  await page.getByLabel("Find a demo account").fill("Multinational");
-  expect(await page.locator(".demo-account").count()).toBeGreaterThan(4);
+  await page.locator(".demo-selector:visible summary").click();
+  await page.getByRole("combobox", { name: "Demo role", exact: true }).selectOption("owner");
+  await expect(page.locator(".demo-selector:visible .demo-account")).toHaveCount(41);
+  await page.getByRole("searchbox", { name: "Find a demo account" }).fill("Multinational");
+  expect(await page.locator(".demo-selector:visible .demo-account").count()).toBeGreaterThan(4);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

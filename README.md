@@ -12,11 +12,11 @@ Multi-page company website, Minerals Exchange and Tafari back office.
 
 ## Pages
 
-Public: `/`, `/services`, `/about`, `/how-it-works`, `/contact`, `/exchange`, `/exchange/:id`, `/privacy`, `/terms`.
+Public: `/`, `/services`, `/about`, `/how-it-works`, `/contact`, `/submit-asset`, `/exchange`, `/exchange/:id`, `/privacy`, `/terms`.
 
 Accounts: `/auth/sign-up`, `/auth/sign-in`, `/auth/verify-email`, `/auth/forgot-password`, `/auth/reset-password`.
 
-Workspace: `/dashboard`, `/dashboard/profile`, `/dashboard/listings`, `/dashboard/offers`, `/dashboard/listings/new`, `/dashboard/listings/:id`, `/dashboard/deals/:id`.
+Workspace: `/dashboard/applications`, `/dashboard/applications/:id`, `/dashboard`, `/dashboard/profile`, `/dashboard/listings`, `/dashboard/offers`, `/dashboard/listings/new`, `/dashboard/listings/:id`, `/dashboard/deals/:id`.
 
 Administration: `/back-office` with asset review, transactions, users, documents, enquiries and audit history. Tabs, search, status filters and page numbers are encoded in the URL and survive reload and browser Back.
 
@@ -31,7 +31,17 @@ Every counter card in the deal-desk and personal workspace is a keyboard-accessi
 5. Participants discuss the transaction in a private deal room. Owners and staff explicitly grant/revoke individual document access after confidentiality agreements are in place.
 6. Tafari records diligence, agreements, regulatory approvals, closing and completion. Only Tafari can mark a sale completed. Acceptance does not transfer ownership or collect payment.
 
-There are no seeded business records or browser-local data fallbacks.
+Live business records are separate from the fictional demo schema. There are no browser-local data fallbacks.
+
+## Guided asset applications
+
+Owners can start at `/submit-asset` without registering. The conversation asks one question at a time, explains terms and accepts unknown/optional information. Contact consent comes before the first database save. Each later answer is saved with an optimistic revision check; the browser receives a 30-day HttpOnly resume cookie. Guest and demo cookies are distinct, tokens are stored only as SHA-256 hashes, and contact details are not placed in URLs or browser storage.
+
+Tafari can see incomplete and submitted applications from the back-office **Asset applications** link and the clickable **New applications** counter. Search and status filters, private staff notes, and audited status changes support follow-up. Applicants can update contact details, review/edit answers before submission, link a guest application to a verified account, and create one private draft from a completed application. Verified linked owners can resume from their workspace on another device. Draft conversion does not publish assets or bypass the existing document/mandate review.
+
+`lib/intake/questions.ts` is the transport-independent question and validation engine, ready to reuse in a future WhatsApp adapter. WhatsApp messaging/webhooks are not connected. No external messages are sent by this flow. The demo sandbox includes 12 fictional complete/incomplete applications across review statuses; live submissions stay in the separate public schema.
+
+Run `node scripts/check-migrations.mjs` to validate all SQL migrations in a fresh temporary schema; `npm run db:migrate` applies additive live migrations and `npm run db:seed-demo` updates only the isolated demo schema. The browser suite covers contact consent, resume, validation, concurrency, CSRF, schema isolation, staff review and idempotent private draft conversion.
 
 ## Super administrator
 
@@ -117,7 +127,7 @@ The exact production origins `https://tafari-capital.vercel.app` and `https://ta
 
 ## Published release
 
-The application is live at [tafari-capital.vercel.app](https://tafari-capital.vercel.app/). [PR #1](https://github.com/citizen-bnk/tafari-capital/pull/1) is merged into `main`. The verified production application build is `05bb9ab`; subsequent documentation changes do not change that build.
+The application is live at [tafari-capital.vercel.app](https://tafari-capital.vercel.app/). Releases are reviewed through repository pull requests and verified against staged production builds before promotion.
 
 Vercel's GitHub integration is not connected; use authenticated CLI releases until it is. Stage a production build, verify, then promote:
 

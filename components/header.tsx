@@ -9,7 +9,7 @@ const links = [
   ["/services", "Services"],
   ["/distribution", "Products"],
   ["/exchange", "Exchange"],
-  ["/how-it-works", "How it works"],
+  ["/submit-asset", "Submit asset"],
   ["/about", "About"],
   ["/contact", "Contact"],
 ];

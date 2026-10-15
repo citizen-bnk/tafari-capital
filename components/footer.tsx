@@ -21,7 +21,7 @@ export function Footer() {
         </div>
         <div>
           <h4>Work with us</h4>
-          <Link href="/dashboard/listings/new">List an asset</Link>
+          <Link href="/submit-asset">List an asset</Link>
           <Link href="/auth/sign-up">Create an account</Link>
           <Link href="/back-office">Tafari back office</Link>
         </div>

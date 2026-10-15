@@ -4,7 +4,7 @@ export default function Privacy() {
     <article className="wrap section prose narrow">
       <p className="eyebrow">Platform information</p>
       <h1>Privacy notice</h1>
-      <p>Last updated: 12 October 2026.</p>
+      <p>Last updated: 15 October 2026.</p>
       <p>
         Tafari Capital (Pty) Ltd operates this website and Minerals Exchange.
         Contact phafanep@gmail.com about your personal information or this
@@ -41,6 +41,15 @@ export default function Privacy() {
         your country.
       </p>
       <h2>Your choices and retention</h2>
+      <p>
+        In the guided asset conversation, contact information is saved after you
+        agree to be contacted. Each later answer is saved so Tafari can follow
+        up even if you do not finish. A secure browser cookie lets you resume
+        for 30 days; expiry of that cookie does not delete the application. You
+        can update contact details in the conversation or ask Tafari to remove
+        your application. Starting another asset keeps your earlier application
+        on record.
+      </p>
       <p>
         You can correct your profile and draft listings in your workspace and
         remove uploaded documents. Contact Tafari to request access, correction,

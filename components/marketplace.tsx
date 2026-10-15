@@ -23,7 +23,7 @@ export function Marketplace() {
         eyebrow="Tafari Minerals Exchange"
         title="Find your next opportunity."
         action={
-          <Link className="btn dark" href="/dashboard/listings/new">
+          <Link className="btn dark" href="/submit-asset">
             List an asset ↗
           </Link>
         }

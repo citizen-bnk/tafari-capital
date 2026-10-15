@@ -41,7 +41,13 @@ type Data = {
   documents: Document[];
   enquiries: Enquiry[];
   audits: Audit[];
-  stats: { review: number; deals: number; users: number; enquiries: number };
+  stats: {
+    applications: number;
+    review: number;
+    deals: number;
+    users: number;
+    enquiries: number;
+  };
 };
 const tabs = [
   ["overview", "Overview", LayoutDashboard],
@@ -121,6 +127,9 @@ export function BackOffice() {
           <Link className="text-link" href="/dashboard">
             My workspace →
           </Link>
+          <Link className="text-link" href="/dashboard/applications">
+            Asset applications →
+          </Link>
         </aside>
         <div className="admin-content">
           <ErrorBox message={saveError} />
@@ -177,6 +186,11 @@ export function BackOffice() {
           {tab === "overview" && (
             <>
               <div className="stats">
+                <StatLink
+                  count={data.stats.applications}
+                  title="New applications"
+                  href="/dashboard/applications?status=new"
+                />
                 <StatLink
                   count={data.stats.review}
                   title="Awaiting review"

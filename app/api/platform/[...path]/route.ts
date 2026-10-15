@@ -64,7 +64,7 @@ export async function GET(request: Request, context: Context) {
       const [profile] =
         await sql`SELECT company,phone,country FROM profiles WHERE id=${a.id}`;
       const [stats] =
-        await sql`SELECT (SELECT count(*) FROM listings WHERE owner_id=${a.id}) listings,(SELECT count(*) FROM listings WHERE owner_id=${a.id} AND status='submitted') review,(SELECT count(*) FROM offers o JOIN listings l ON l.id=o.listing_id WHERE (o.buyer_id=${a.id} OR l.owner_id=${a.id}) AND o.status='pending') offers,(SELECT count(*) FROM offers o JOIN listings l ON l.id=o.listing_id WHERE (o.buyer_id=${a.id} OR l.owner_id=${a.id}) AND o.status='accepted') deals`;
+        await sql`SELECT (SELECT count(*) FROM asset_applications WHERE owner_id=${a.id}) applications,(SELECT count(*) FROM listings WHERE owner_id=${a.id}) listings,(SELECT count(*) FROM listings WHERE owner_id=${a.id} AND status='submitted') review,(SELECT count(*) FROM offers o JOIN listings l ON l.id=o.listing_id WHERE (o.buyer_id=${a.id} OR l.owner_id=${a.id}) AND o.status='pending') offers,(SELECT count(*) FROM offers o JOIN listings l ON l.id=o.listing_id WHERE (o.buyer_id=${a.id} OR l.owner_id=${a.id}) AND o.status='accepted') deals`;
       return Response.json({
         actor: { ...a, ...profile },
         listings,
@@ -146,7 +146,7 @@ export async function GET(request: Request, context: Context) {
           sql`SELECT d.id,d.listing_id,d.owner_id,d.name,d.kind,d.size,d.state,d.created_at,l.title FROM documents d LEFT JOIN listings l ON l.id=d.listing_id WHERE d.state<>'deleted' AND (d.name ILIKE ${search} OR l.title ILIKE ${search}) AND (${documentStatus}='' OR d.state=${documentStatus}) ORDER BY d.created_at DESC LIMIT 50 OFFSET ${offset}`,
         ]);
       const [stats] =
-        await sql`SELECT (SELECT count(*) FROM listings WHERE status='submitted') review,(SELECT count(*) FROM offers WHERE status='accepted') deals,(SELECT count(*) FROM profiles) users,(SELECT count(*) FROM enquiries WHERE status='new') enquiries`;
+        await sql`SELECT (SELECT count(*) FROM asset_applications WHERE status='new') applications,(SELECT count(*) FROM listings WHERE status='submitted') review,(SELECT count(*) FROM offers WHERE status='accepted') deals,(SELECT count(*) FROM profiles) users,(SELECT count(*) FROM enquiries WHERE status='new') enquiries`;
       return Response.json({
         actor: a,
         listings,

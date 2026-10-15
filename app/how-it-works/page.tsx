@@ -15,13 +15,13 @@ export default function Process() {
         {[
           [
             "01",
-            "Create your account",
-            "Register and verify your email. Tell us whether you are an owner, buyer or service partner.",
+            "Tell us about your asset",
+            "Start a private conversation with Tafari. Share your contact details and answer one simple question at a time. No account is needed to begin.",
           ],
           [
             "02",
-            "Submit an asset",
-            "Create a draft listing, upload title/right evidence and a signed mandate, then submit it to Tafari.",
+            "Prepare your listing",
+            "Tafari follows up on your application. With a verified account, turn it into a private draft, upload title/right evidence and a mandate, then request review.",
           ],
           [
             "03",
@@ -56,8 +56,8 @@ export default function Process() {
         transfers and final payment take place under the agreed legal documents
         and required approvals.
       </div>
-      <Link className="btn dark" href="/auth/sign-up">
-        Create your account →
+      <Link className="btn dark" href="/submit-asset">
+        Tell us about your asset →
       </Link>
     </div>
   );

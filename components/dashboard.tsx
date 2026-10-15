@@ -16,7 +16,13 @@ export function Dashboard() {
     actor: User;
     listings: Listing[];
     offers: Offer[];
-    stats: { listings: number; review: number; offers: number; deals: number };
+    stats: {
+      applications: number;
+      listings: number;
+      review: number;
+      offers: number;
+      deals: number;
+    };
   }>("dashboard");
   if (loading) return <Loading />;
   if (error || !data) return <ErrorBox message={error} />;
@@ -48,6 +54,11 @@ export function Dashboard() {
         </div>
       )}
       <div className="stats">
+        <StatLink
+          count={data.stats.applications}
+          title="Your applications"
+          href="/dashboard/applications?scope=mine"
+        />
         <StatLink
           count={data.stats.listings}
           title="Your listings"

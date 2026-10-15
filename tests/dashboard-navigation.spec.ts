@@ -53,7 +53,7 @@ test("deal-desk counters open matching records and preserve filters, paging and 
       page.getByRole("heading", { name: heading, exact: true }),
     ).toBeVisible();
     await page.goBack();
-    await expect(page.locator(".stats .stat-link")).toHaveCount(4);
+    await expect(page.locator(".stats .stat-link")).toHaveCount(5);
   }
   await page.goto("/back-office?tab=users");
   await expect(page.locator(".admin-content tbody tr")).toHaveCount(50);
@@ -72,7 +72,7 @@ test("deal-desk counters open matching records and preserve filters, paging and 
   );
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/back-office");
-  await expect(page.locator(".stats .stat-link")).toHaveCount(4);
+  await expect(page.locator(".stats .stat-link")).toHaveCount(5);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

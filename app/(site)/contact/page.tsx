@@ -1,7 +1,18 @@
 import { PageIntro } from "@/components/ui";
 import { ContactForm } from "@/components/contact-form";
+import Link from "next/link";
+import { enquiryTopics } from "@/lib/site-content";
 export const metadata = { title: "Contact Tafari" };
-export default function Contact() {
+export default async function Contact({
+  searchParams,
+}: {
+  searchParams: Promise<{ topic?: string | string[] }>;
+}) {
+  const { topic: requestedTopic } = await searchParams;
+  const topic =
+    typeof requestedTopic === "string" && enquiryTopics.includes(requestedTopic)
+      ? requestedTopic
+      : "";
   return (
     <div className="wrap section">
       <PageIntro
@@ -27,11 +38,12 @@ export default function Contact() {
             Kingdom of Lesotho
           </p>
           <div className="notice">
-            Already have an account? Use your workspace to submit listings,
-            manage offers and keep documents in one place.
+            Already have an account?{" "}
+            <Link href="/dashboard">Use your workspace</Link> to submit
+            listings, manage offers and keep documents in one place.
           </div>
         </div>
-        <ContactForm />
+        <ContactForm key={topic} topic={topic} />
       </div>
     </div>
   );

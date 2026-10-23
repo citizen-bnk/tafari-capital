@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { api } from "@/lib/client";
 import { ErrorBox } from "@/components/ui";
-export function ContactForm() {
+import Link from "next/link";
+export function ContactForm({ topic = "" }: { topic?: string }) {
   const [error, setError] = useState(""),
     [done, setDone] = useState(false),
     [busy, setBusy] = useState(false);
@@ -23,7 +24,11 @@ export function ContactForm() {
         setError("");
         const d = Object.fromEntries(new FormData(e.currentTarget));
         try {
-          await api("enquiries", { ...d, consent: d.consent === "on" });
+          await api("enquiries", {
+            ...d,
+            message: topic ? `[${topic}]\n${d.message}` : d.message,
+            consent: d.consent === "on",
+          });
           setDone(true);
         } catch (x) {
           setError((x as Error).message);
@@ -51,13 +56,20 @@ export function ContactForm() {
         <input type="email" name="email" required autoComplete="email" />
       </label>
       <label className="full">
+        Enquiry topic
+        <input name="topic" value={topic || "General enquiry"} readOnly />
+      </label>
+      <label className="full">
         How can we help?
         <textarea
           name="message"
           required
           minLength={20}
-          maxLength={5000}
+          maxLength={topic ? 4950 - topic.length : 5000}
           rows={5}
+          defaultValue={
+            topic ? `I would like to discuss ${topic.toLowerCase()}.\n\n` : ""
+          }
         />
       </label>
       <label className="honeypot" aria-hidden="true">
@@ -65,8 +77,11 @@ export function ContactForm() {
         <input name="website" tabIndex={-1} autoComplete="off" />
       </label>
       <label className="check full">
-        <input type="checkbox" name="consent" required />I agree to Tafari using
-        these details to respond, as described in the privacy notice.
+        <input type="checkbox" name="consent" required />
+        <span>
+          I agree to Tafari using these details to respond, as described in the{" "}
+          <Link href="/privacy">privacy notice</Link>.
+        </span>
       </label>
       <div className="full">
         <ErrorBox message={error} />

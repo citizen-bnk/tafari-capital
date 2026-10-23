@@ -4,7 +4,7 @@ Multi-page company website, Minerals Exchange and Tafari back office.
 
 ## Stack
 
-- Next.js 16.4 App Router, React 19.3 and TypeScript.
+- Next.js 16.4.2 App Router, React 19.3 and TypeScript.
 - Neon PostgreSQL and managed Neon Auth: email/password, verification codes and recovery.
 - Private Vercel Blob storage, direct browser uploads and authorized downloads.
 - Zod server validation and Playwright workflow/authorization tests.
@@ -12,7 +12,13 @@ Multi-page company website, Minerals Exchange and Tafari back office.
 
 ## Pages
 
-Public: `/`, `/services`, `/about`, `/how-it-works`, `/contact`, `/submit-asset`, `/exchange`, `/exchange/:id`, `/privacy`, `/terms`.
+Public: `/`, `/services`, `/distribution`, `/about`, `/how-it-works`, `/contact`, `/submit-asset`, `/exchange`, `/exchange/:id`, `/privacy`, `/terms`.
+
+Service details: `/services/distribution`, `/services/mining-asset-facilitation`, `/services/minerals-exchange`, `/services/operations-processing-export`, `/services/trade-deal-structuring`. Shared service content lives in `lib/site-content.ts`; every detail page includes scope, audience, process, preparation and next steps.
+
+Resources: `/guides/asset-owners`, `/guides/buyers`, `/partners`, `/faq`. The homepage, service directory, footer and floating quick menu link to these destinations. Menus support keyboard dismissal and close when navigating. The standalone asset funnel has no website menu. Allowlisted contact topics prefill the enquiry and are included in its stored message; arbitrary topic values fall back to a general enquiry.
+
+Public navigation checks: `npx playwright test tests/public-navigation.spec.ts`. These crawl public content links and anchors, click desktop/mobile menus, confirm unknown detail URLs return 404, verify the standalone funnel layout and intercept enquiry submission to test topic preservation without creating business records.
 
 Accounts: `/auth/sign-up`, `/auth/sign-in`, `/auth/verify-email`, `/auth/forgot-password`, `/auth/reset-password`.
 

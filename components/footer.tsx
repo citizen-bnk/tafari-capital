@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { services } from "@/lib/site-content";
 export function Footer() {
   return (
     <footer className="site-footer">
@@ -14,7 +15,12 @@ export function Footer() {
         </div>
         <div>
           <h4>Explore</h4>
-          <Link href="/services">Our services</Link>
+          <Link href="/services">All services</Link>
+          {services.map((service) => (
+            <Link href={`/services/${service.slug}`} key={service.slug}>
+              {service.title}
+            </Link>
+          ))}
           <Link href="/distribution">FMCG & distribution</Link>
           <Link href="/exchange">Minerals Exchange</Link>
           <Link href="/about">About Tafari</Link>
@@ -23,10 +29,15 @@ export function Footer() {
           <h4>Work with us</h4>
           <Link href="/submit-asset">List an asset</Link>
           <Link href="/auth/sign-up">Create an account</Link>
+          <Link href="/guides/asset-owners">Owner guide</Link>
+          <Link href="/guides/buyers">Buyer guide</Link>
+          <Link href="/partners">Partnerships</Link>
+          <Link href="/faq">Questions & answers</Link>
           <Link href="/back-office">Tafari back office</Link>
         </div>
         <div>
           <h4>Get in touch</h4>
+          <Link href="/contact">Send an enquiry</Link>
           <a href="mailto:phafanep@gmail.com">phafanep@gmail.com</a>
           <a href="tel:+27728151383">+27 72 815 1383</a>
           <p>

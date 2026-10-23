@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import { useAppSession } from "@/components/app-session";
 const links = [
@@ -14,16 +14,33 @@ const links = [
   ["/contact", "Contact"],
 ];
 export function Header() {
-  const [open, setOpen] = useState(false);
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  function setOpen(value: boolean) {
+    setOpenPath(value ? path : null);
+  }
   const path = usePathname(),
     router = useRouter();
+  const open = openPath === path;
   const { data: session, isPending, signOut } = useAppSession();
   return (
     <>
       <a className="skip" href="#main">
         Skip to content
       </a>
-      <header className="site-header">
+      <header
+        className="site-header"
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && open) {
+            setOpen(false);
+            menuButton.current?.focus();
+          }
+        }}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget))
+            setOpen(false);
+        }}
+      >
         <div className="wrap header-inner">
           <Link href="/" className="brand" onClick={() => setOpen(false)}>
             <img src="/assets/lion.png" alt="" />
@@ -33,6 +50,7 @@ export function Header() {
           </Link>
           <button
             className="mobile-menu"
+            ref={menuButton}
             aria-expanded={open}
             aria-controls="main-menu"
             aria-label="Toggle menu"
@@ -49,7 +67,13 @@ export function Header() {
               <Link
                 key={href}
                 href={href}
-                aria-current={path === href ? "page" : undefined}
+                aria-current={
+                  path === href
+                    ? "page"
+                    : href !== "/" && path.startsWith(`${href}/`)
+                      ? "location"
+                      : undefined
+                }
                 onClick={() => setOpen(false)}
               >
                 {title}

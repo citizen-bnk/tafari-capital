@@ -28,10 +28,7 @@ export default function Home() {
               <Link className="btn gold" href="/exchange">
                 Explore the Exchange <ArrowUpRight size={18} />
               </Link>
-              <Link
-                className="btn outline-light"
-                href="/submit-asset"
-              >
+              <Link className="btn outline-light" href="/submit-asset">
                 List your asset
               </Link>
             </div>
@@ -115,34 +112,34 @@ export default function Home() {
           {[
             [
               Pickaxe,
-              "01",
+              "mining-asset-facilitation",
               "Mining asset facilitation",
               "Sell an asset, bring in a partner or explore an offtake agreement. We help put the right people around a credible opportunity.",
             ],
             [
               ShieldCheck,
-              "02",
+              "minerals-exchange",
               "Tafari Minerals Exchange",
               "One place to list assets, submit supporting documents, receive offers and work through the transaction.",
             ],
             [
               Truck,
-              "03",
+              "operations-processing-export",
               "Operations & logistics",
               "Connect with equipment, contract mining, processing and logistics partners who can deliver.",
             ],
-          ].map(([Icon, n, title, body]) => {
+          ].map(([Icon, slug, title, body], index) => {
             const I = Icon as typeof Pickaxe;
             return (
-              <article className="service-card" key={String(n)}>
+              <article className="service-card" key={String(slug)}>
                 <div className="service-top">
                   <I size={30} strokeWidth={1.3} />
-                  <span>{String(n)}</span>
+                  <span>0{index + 1}</span>
                 </div>
                 <h3>{String(title)}</h3>
                 <p>{String(body)}</p>
-                <Link href="/services">
-                  Discover our approach <ArrowRight size={16} />
+                <Link href={`/services/${slug}`}>
+                  Explore this service <ArrowRight size={16} />
                 </Link>
               </article>
             );

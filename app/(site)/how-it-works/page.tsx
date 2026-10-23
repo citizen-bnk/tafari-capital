@@ -11,6 +11,11 @@ export default function Process() {
         A managed process for owners and buyers, with Tafari coordinating the
         work between them.
       </PageIntro>
+      <div className="resource-links">
+        <Link href="/guides/asset-owners">Guide for asset owners →</Link>
+        <Link href="/guides/buyers">Guide for buyers →</Link>
+        <Link href="/faq">Questions & answers →</Link>
+      </div>
       <div className="steps-grid">
         {[
           [

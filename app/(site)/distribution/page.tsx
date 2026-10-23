@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { enquiryHref } from "@/lib/site-content";
 import { PageIntro } from "@/components/ui";
 export const metadata = { title: "FMCG & distribution" };
 const products = [
@@ -22,7 +23,7 @@ export default function Distribution() {
         eyebrow="FMCG & distribution"
         title="From supplier to shelf in Lesotho."
         action={
-          <Link className="btn dark" href="/contact">
+          <Link className="btn dark" href={enquiryHref("FMCG & distribution")}>
             Discuss distribution ↗
           </Link>
         }
@@ -36,6 +37,18 @@ export default function Distribution() {
             <p className="eyebrow">Product range</p>
             <h3>{title}</h3>
             <p>{copy}</p>
+            <Link
+              className="text-link"
+              href={enquiryHref(
+                title === "Your product" ? "Brand distribution" : title,
+              )}
+            >
+              Enquire about{" "}
+              {title === "Your product"
+                ? "brand distribution"
+                : title.toLowerCase()}{" "}
+              →
+            </Link>
           </article>
         ))}
       </div>
@@ -93,6 +106,12 @@ export default function Distribution() {
             <li>Mixed loads across the range</li>
           </ul>
         </article>
+      </div>
+      <div className="resource-links">
+        <Link href="/services/distribution">
+          How our distribution service works →
+        </Link>
+        <Link href="/partners">For brands & delivery partners →</Link>
       </div>
       <div className="notice">
         Contact Tafari for current availability, supply terms and delivery

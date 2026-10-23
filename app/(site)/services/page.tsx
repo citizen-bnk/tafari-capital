@@ -1,81 +1,34 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { PageIntro } from "@/components/ui";
-export const metadata = { title: "Our services" };
-const services = [
-  [
-    "00",
-    "FMCG & distribution",
-    "Food staples and consumer goods across Lesotho.",
-    [
-      "Sourcing, import permits and border clearance",
-      "Maseru warehousing and stock rotation",
-      "Retailer, wholesaler and institutional delivery routes",
-      "Lesotho market entry for brands and manufacturers",
-    ],
-  ],
-  [
-    "01",
-    "Mining asset facilitation",
-    "From first mandate to the right introduction.",
-    [
-      "Full asset sale, partial stake and joint ventures",
-      "Owner mandate and title checks",
-      "Buyer-ready profiles and managed data rooms",
-      "Commercial terms and deal coordination",
-    ],
-  ],
-  [
-    "02",
-    "Tafari Minerals Exchange",
-    "A workspace for owners, buyers and the Tafari deal desk.",
-    [
-      "Owner listings with private supporting files",
-      "Review before marketplace publication",
-      "Buyer offers and a private conversation record",
-      "Tafari-managed due diligence and closing",
-    ],
-  ],
-  [
-    "03",
-    "Operations, processing & export",
-    "Make the transaction work beyond the signature.",
-    [
-      "Equipment supply and hire",
-      "Contract mining and processing partners",
-      "Road, rail, ports and border coordination",
-      "Clearing agents and shipping introductions",
-    ],
-  ],
-  [
-    "04",
-    "Trade & deal structuring",
-    "Practical routes into cross-border markets.",
-    [
-      "Commodity and consumer goods distribution",
-      "Market entry and rollout in Lesotho",
-      "MOUs, NCNDAs and joint venture coordination",
-      "Financial modelling and funding introductions",
-    ],
-  ],
-];
+import { services } from "@/lib/site-content";
+export const metadata = {
+  title: "Our services",
+  description:
+    "Explore Tafari’s distribution, mining asset, Exchange, operations and trade services.",
+};
 export default function Services() {
   return (
     <div className="wrap section">
       <PageIntro eyebrow="What we do" title="Trade and mining. One standard.">
-        Careful verification, clear agreements and a team that stays with the
-        deal.
+        Choose a service to see how it works, what to prepare and how to begin.
       </PageIntro>
       <div className="services-list">
-        {services.map(([n, title, lede, items]) => (
-          <article className="service-row" key={String(n)}>
-            <span className="big-number">{n}</span>
+        {services.map((service, index) => (
+          <article className="service-row" key={service.slug}>
+            <span className="big-number">0{index + 1}</span>
             <div>
-              <h2>{title}</h2>
-              <p className="lede">{lede}</p>
+              <h2>
+                <Link href={`/services/${service.slug}`}>{service.title}</Link>
+              </h2>
+              <p className="lede">{service.summary}</p>
+              <Link className="text-link" href={`/services/${service.slug}`}>
+                Explore {service.title} <ArrowUpRight size={18} />
+              </Link>
             </div>
             <ul>
-              {(items as string[]).map((x) => (
-                <li key={x}>{x}</li>
+              {service.scope.map((item) => (
+                <li key={item}>{item}</li>
               ))}
             </ul>
           </article>

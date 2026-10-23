@@ -21,8 +21,8 @@ export function Footer() {
               {service.title}
             </Link>
           ))}
-          <Link href="/distribution">FMCG & distribution</Link>
-          <Link href="/exchange">Minerals Exchange</Link>
+          <Link href="/distribution">Products & supply</Link>
+          <Link href="/exchange">Browse available assets</Link>
           <Link href="/about">About Tafari</Link>
         </div>
         <div>
